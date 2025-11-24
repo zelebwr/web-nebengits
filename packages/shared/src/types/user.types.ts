@@ -1,7 +1,7 @@
 import { User, Role } from "@prisma/client";
 
 // ----------------------------------------------------------------
-// --- Frontend -> Server (Data Sent TO the Backend) ---
+// --- Input Types ---
 // ----------------------------------------------------------------
 
 export type LoginInput = Pick<User, "email" | "password">;
@@ -11,7 +11,7 @@ export type RegisterInput = Pick<User, "email" | "password" | "name"> & {
 };
 
 // ----------------------------------------------------------------
-// --- Server -> Frontend (Data Sent FROM the Backend) ---
+// --- Output Types ---
 // ----------------------------------------------------------------
 
 /**
@@ -30,3 +30,6 @@ export interface AuthResponse {
     token: string;
     user: PublicUser;
 }
+
+// Re-export Role so frontend can use Role.ADMIN etc.
+export { Role };

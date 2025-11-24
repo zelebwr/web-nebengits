@@ -10,7 +10,7 @@ datasource db {
 enum Role {
   STUDENT
   ADMIN
-}x
+}
 
 enum RideStatus {
   OPEN
@@ -52,13 +52,13 @@ model Ride {
   
   // Verification & Safety
   vehiclePhotoUrl  String
-  verificationCode String?    // Nullable because cancelled rides might not need one
+  verificationCode String?
   
   // Status & Metadata
   status           RideStatus @default(OPEN)
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
-  deletedAt        DateTime?  // Soft delete support
+  deletedAt        DateTime?
 
   // Relations
   driver           User       @relation("DriverRides", fields: [driverId], references: [id])

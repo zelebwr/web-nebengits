@@ -421,3 +421,42 @@ model Ride {
 ```
 
 ---
+
+## I. API Endpoints
+
+The backend provides a RESTful API reachable at `http://localhost:5000/api`. All endpoints (except Login/Register) require the `Authorization: Bearer <token>` header.
+
+### 1. Authentication (`/api/auth`)
+
+These endpoints handle user access and security.
+
+|Method|Endpoint|Description|Access|
+|---|---|---|---|
+|`POST`|`/register`|Registers a new user. Requires an ITS email domain (`@student.its.ac.id`).|Public|
+|`POST`|`/login`|Authenticates a user and returns a JWT Token + User Profile.|Public|
+
+### 2. User Management (`/api/users`)
+
+Endpoints for retrieving user-specific data.
+
+|Method|Endpoint|Description|Access|
+|---|---|---|---|
+|`GET`|`/me`|Fetches the currently logged-in user's profile (Name, Role, Green Points).|**Private** (Token required)|
+
+### 3. Ride Operations (`/api/rides`)
+
+The core functionality for the Nebeng system.
+
+| Method | Endpoint      | Description                                                                                               | Access                    |
+| ------ | ------------- | --------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `GET`  | `/`           | **The "Feed".** Returns a list of all _open_ and _future_ rides. Supports filtering by destination.       | **Private**               |
+| `POST` | `/`           | **Create Ride.** A Driver posts a new ride. Handles image upload for the vehicle photo.                   | **Private**               |
+| `POST` | `/:id/book`   | **Book Seat.** A Passenger joins a ride. Decrements seat count and returns the Secret OTP.                | **Private**               |
+| `POST` | `/:id/verify` | **Complete Ride.** The Driver submits the OTP code. If correct, distributes Green Points to both parties. | **Private** (Driver only) |
+
+### 4. Image Serving (`/uploads`)
+
+- **URL:** `http://localhost:5000/uploads/<filename>`
+- **Purpose:** Serves the static vehicle images uploaded by drivers.
+
+---

@@ -1,6 +1,21 @@
 import app from "./app";
 import { env } from "./config/env";
+import { prisma } from "./config/db";
 
-app.listen(env.PORT, () => {
-    console.log(`Server running on http://localhost:${env.PORT}`);
-});
+const startServer = async () => {
+    try {
+        // 1. Connect to Database
+        await prisma.$connect();
+        console.log("✅ Connected to MongoDB via Prisma");
+
+        // 2. Start Express Server
+        app.listen(env.PORT, () => {
+            console.log(`🚀 Server running on http://localhost:${env.PORT}`);
+        });
+    } catch (error) {
+        console.error("❌ Failed to start server:", error);
+        process.exit(1);
+    }
+};
+
+startServer();

@@ -2,58 +2,64 @@ import { Ride, RideStatus } from "@prisma/client";
 import { PublicUser } from "./user.types";
 
 // ----------------------------------------------------------------
-// --- Frontend -> Server (Data Sent TO the Backend) ---
+// --- Input Types (Frontend -> Backend) ---
 // ----------------------------------------------------------------
 
-/**
- * Data required to create a ride.
- * Note: We don't send `driverId` or `status` because the Backend sets those.
- */
 export interface CreateRideInput {
-  destination: string;
-  pickupPoint: string;
-  departureTime: string; // Sent as ISO string from frontend
-  seatsAvailable: number;
-  cost: number;
-  // vehiclePhoto is handled via FormData, not JSON body usually, 
-  // but if using base64 or pre-uploaded URL, it goes here.
+    destination: string;
+    pickupPoint: string;
+    departureTime: string; // ISO String expected from frontend date picker
+    seatsAvailable: number;
+    cost: number;
 }
 
-/**
- * Query parameters for filtering the ride feed.
- */
 export interface ApiRideQuery {
-  page?: string;
-  limit?: string;
-  destination?: string;
-  status?: RideStatus;
+    page?: number | string; // Allow numbers for easier frontend usage
+    limit?: number | string;
+    destination?: string;
+    status?: RideStatus;
 }
 
 // ----------------------------------------------------------------
-// --- Server -> Frontend (Data Sent FROM the Backend) ---
+// --- Output Types (Backend -> Frontend) ---
 // ----------------------------------------------------------------
 
 /**
- * The full ride object returned to the frontend.
- * Includes the nested `driver` object for display cards.
+ * The Ride object as seen by the Frontend.
+ * We Omit Date fields from the Prisma model and redefine them as strings
+ * because JSON serialization converts Date objects to ISO strings.
  */
-export interface ApiRide extends Omit<Ride, "verificationCode" | "deletedAt"> {
-  driver: Pick<PublicUser, "name" | "greenPoints" | "phone">;
-  // We might include passenger count or list depending on privacy
-  _count?: {
-    passengers: number;
-  };
+export interface ApiRide
+    extends Omit<
+        Ride,
+        | "verificationCode"
+        | "deletedAt"
+        | "departureTime"
+        | "createdAt"
+        | "updatedAt"
+    > {
+    departureTime: string; // ISO String
+    createdAt: string; // ISO String
+    updatedAt: string; // ISO String
+
+    // Nested Driver Info
+    driver: Pick<PublicUser, "name" | "greenPoints" | "phone">;
+
+    // Optional counts (good to have defined for future)
+    _count?: {
+        passengers: number;
+    };
 }
 
 export interface ApiRideListResponse {
-  data: ApiRide[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+    data: ApiRide[];
+    meta: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
 }
 
-// Re-export Enum so Frontend can use it
+// Re-export Enum so Frontend can use it for status checking
 export { RideStatus };

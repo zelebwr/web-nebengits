@@ -1,23 +1,23 @@
 import { Router } from "express";
-import {
-    createRide,
-    getRides,
-    bookRide,
-    verifyRide,
-} from "../controllers/ride.controller";
 import { authenticate } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/upload.middleware";
+import * as rideController from "../controllers/ride.controller";
 
 const router = Router();
 
-// Public Feed (Protected by Auth usually, or public)
-router.get("/", authenticate, getRides);
+// Apply authentication middleware to ALL routes in this router
+router.use(authenticate);
 
-// Driver Actions
-router.post("/", authenticate, upload.single("vehiclePhoto"), createRide);
-router.post("/:id/verify", authenticate, verifyRide);
+// Public Feed (Authenticated Users)
+router.get("/", rideController.getRides);
 
-// Passenger Actions
-router.post("/:id/book", authenticate, bookRide);
+// Driver: Create Ride (Requires Image Upload)
+router.post("/", upload.single("vehiclePhoto"), rideController.createRide);
+
+// Driver: Verify Code
+router.post("/:id/verify", rideController.verifyRide);
+
+// Passenger: Book Ride
+router.post("/:id/book", rideController.bookRide);
 
 export default router;
