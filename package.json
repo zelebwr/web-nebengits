@@ -1,0 +1,15 @@
+{
+    "name": "web-nebengits",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "pnpm --parallel --filter \"@web-nebengits/client\" --filter \"@web-nebengits/server\" dev",
+        "dev:client": "pnpm --filter \"@web-nebengits/client\" dev",
+        "dev:server": "pnpm --filter \"@web-nebengits/server\" dev",
+        "prisma:push": "pnpm --filter \"@web-nebengits/server\" prisma:push",
+        "prisma:migrate": "pnpm --filter \"@web-nebengits/server\" prisma:migrate",
+        "prisma:generate": "pnpm --filter \"@web-nebengits/server\" prisma:generate",
+        "prisma:seed": "pnpm --filter \"@web-nebengits/server\" prisma:seed"
+    },
+    "packageManager": "pnpm@10.23.0"
+}

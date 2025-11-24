@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}x
+
+enum RideStatus {
+  OPEN
+  FULL
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  email       String    @unique
+  password    String
+  name        String
+  phone       String?
+  role        Role      @default(STUDENT)
+  greenPoints Int       @default(0)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? // Soft delete support
+
+  // Relations
+  ridesDriven Ride[]    @relation("DriverRides")
+  ridesTaken  Ride[]    @relation("PassengerRides", fields: [rideIds], references: [id])
+  rideIds     String[]  @db.ObjectId
+
+  @@map("users")
+}
+
+model Ride {
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Trip Details
+  destination      String
+  pickupPoint      String
+  departureTime    DateTime
+  seatsAvailable   Int
+  cost             Int        @default(10000)
+  
+  // Verification & Safety
+  vehiclePhotoUrl  String
+  verificationCode String?    // Nullable because cancelled rides might not need one
+  
+  // Status & Metadata
+  status           RideStatus @default(OPEN)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?  // Soft delete support
+
+  // Relations
+  driver           User       @relation("DriverRides", fields: [driverId], references: [id])
+  driverId         String     @db.ObjectId
+  
+  passengers       User[]     @relation("PassengerRides", fields: [passengerIds], references: [id])
+  passengerIds     String[]   @db.ObjectId
+
+  @@map("rides")
+}
