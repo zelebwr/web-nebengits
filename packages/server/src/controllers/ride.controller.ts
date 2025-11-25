@@ -11,8 +11,11 @@ import { validateRideData } from "../utils/validation";
  */
 export const getRides = async (req: AuthRequest, res: Response) => {
     try {
+        
         const query = req.query as unknown as ApiRideQuery;
         const result = await rideService.getAvailableRides(query);
+        
+        // console.log("GET /api/rides hit by user:", req.user?.email); // For debugging purposes
 
         res.json({
             success: true,
@@ -28,6 +31,36 @@ export const getRides = async (req: AuthRequest, res: Response) => {
         });
     }
 };
+
+/**
+ * GET /api/rides/:id
+ * Get details of a specific ride.
+ */
+export const getRideDetail = async (req: AuthRequest, res: Response) => {
+    try {
+        const rideId = req.params.id;
+        const ride = await rideService.getRideById(rideId);
+
+        res.json({
+            success: true,
+            message: "Ride details fetched",
+            data: ride,
+        });
+    } catch (error: any) {
+        if (error.message === "Ride not found") {
+            return res.status(404).json({
+                success: false,
+                message: "Ride not found",
+            });
+        }
+        console.error("[Ride] GetDetail Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch ride details",
+        });
+    }
+};
+
 
 /**
  * POST /api/rides

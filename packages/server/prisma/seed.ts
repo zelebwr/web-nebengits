@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 const LOCATIONS = [
     "Gedung Rektorat ITS",
     "Masjid Manarul Ilmi",
-    "Perpusatakaan Pusat ITS",
+    "Perpustakaan Pusat ITS",
     "Tower 1 ITS",
     "Tower 2 ITS",
     "Graha Sepuluh Nopember",
@@ -19,12 +19,11 @@ const LOCATIONS = [
     "Departemen Teknik Lingkungan ITS",
     "Departemen Arsitektur ITS",
     "Departemen Desain Produk Industri ITS",
-    "Departemen Teknik Industri ITS", 
+    "Departemen Teknik Industri ITS",
     "Departemen Statistika ITS",
     "Departemen Matematika ITS",
     "Departemen Fisika ITS",
     "Departemen Kimia ITS",
-    "Depatemen Biologi ITS", 
     "Departemen Biologi ITS",
     "Departemen Teknik Perkapalan ITS",
     "Departemen Teknik Kelautan ITS",
@@ -71,6 +70,7 @@ async function main() {
             phone: "081234567890",
             role: Role.STUDENT,
             greenPoints: 50,
+            deletedAt: null, // Explicitly set null
         },
     });
 
@@ -82,6 +82,7 @@ async function main() {
             phone: "081298765432",
             role: Role.STUDENT,
             greenPoints: 20,
+            deletedAt: null, // Explicitly set null
         },
     });
 
@@ -98,6 +99,7 @@ async function main() {
                 phone: `08120000000${i}`,
                 role: Role.STUDENT,
                 greenPoints: Math.floor(Math.random() * 100),
+                deletedAt: null, // Explicitly set null
             },
         });
         users.push(user);
@@ -105,7 +107,6 @@ async function main() {
     console.log("👥 Created 8 extra users");
 
     // 5. Create Rides
-    // Define the type explicitly to avoid 'never[]' inference issues
     type RideSeedData = {
         driverId: string;
         destination: string;
@@ -114,16 +115,15 @@ async function main() {
         seatsAvailable: number;
         cost: number;
         status: RideStatus;
-        passengerIds: string[]; // Explicit type here fixes the error
+        passengerIds: string[];
     };
 
     const ridesToCreate: RideSeedData[] = [
-        // Specific Rides for Budi (So you can demo them easily)
         {
             driverId: budi.id,
             destination: "Gedung Rektorat ITS",
             pickupPoint: "Indomaret Gebang",
-            departureTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+            departureTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
             seatsAvailable: 2,
             cost: 10000,
             status: RideStatus.OPEN,
@@ -133,7 +133,7 @@ async function main() {
             driverId: budi.id,
             destination: "Galaxy Mall",
             pickupPoint: "Departemen Informatika",
-            departureTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // In 2 hours
+            departureTime: new Date(Date.now() + 2 * 60 * 60 * 1000),
             seatsAvailable: 3,
             cost: 15000,
             status: RideStatus.OPEN,
@@ -143,27 +143,24 @@ async function main() {
             driverId: budi.id,
             destination: "Terminal Keputih",
             pickupPoint: "Asrama Mahasiswa",
-            departureTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
+            departureTime: new Date(Date.now() - 24 * 60 * 60 * 1000),
             seatsAvailable: 0,
             cost: 5000,
-            status: RideStatus.COMPLETED, // Past ride
+            status: RideStatus.COMPLETED,
             passengerIds: [siti.id],
         },
     ];
 
-    // Generate random rides from other users
     for (let i = 0; i < 15; i++) {
         const driver = users[Math.floor(Math.random() * users.length)];
         const destination =
             LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
         let pickup = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
 
-        // Ensure pickup != destination
         while (pickup === destination) {
             pickup = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
         }
 
-        // Random time between now and next 7 days
         const timeOffset = Math.random() * 7 * 24 * 60 * 60 * 1000;
         const departureTime = new Date(Date.now() + timeOffset);
 
@@ -172,10 +169,10 @@ async function main() {
             destination,
             pickupPoint: pickup,
             departureTime,
-            seatsAvailable: Math.floor(Math.random() * 3) + 1, // 1 to 3 seats
-            cost: Math.floor(Math.random() * 4 + 1) * 5000, // 5k, 10k, 15k, 20k
+            seatsAvailable: Math.floor(Math.random() * 3) + 1,
+            cost: Math.floor(Math.random() * 4 + 1) * 5000,
             status: RideStatus.OPEN,
-            passengerIds: [], // No passengers yet
+            passengerIds: [],
         });
     }
 
@@ -189,10 +186,11 @@ async function main() {
                 seatsAvailable: r.seatsAvailable,
                 cost: r.cost,
                 status: r.status,
-                passengerIds: r.passengerIds, // Now safe because it's string[]
+                passengerIds: r.passengerIds,
                 vehiclePhotoUrl:
-                    "https://placehold.co/600x400/png?text=Vehicle+Photo", // Mock Image
-                verificationCode: "8921", // Hardcoded OTP for easy testing
+                    "https://placehold.co/600x400/png?text=Vehicle+Photo",
+                verificationCode: "8921",
+                deletedAt: null,
             },
         });
     }

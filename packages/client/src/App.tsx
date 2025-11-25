@@ -13,20 +13,11 @@ import { MainLayout } from "./components/Layout/MainLayout";
 // --- IMPORT THE REAL DASHBOARD HERE ---
 import { DashboardPage } from "./features/rides/DashboardPage";
 
-// --- Placeholder Pages (Keep these only if you haven't built them yet) ---
-const CreateRidePage = () => (
-    <MainLayout>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Offer a Ride</h2>
-        <p>Form to create a ride goes here.</p>
-    </MainLayout>
-);
+// --- CREATE RIDE PAGE ---
+import { CreateRidePage } from "./features/rides/components/CreateRidePage";
 
-const RideDetailPage = () => (
-    <MainLayout>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Ride Details</h2>
-        <p>Details for a specific ride.</p>
-    </MainLayout>
-);
+// --- CREATE RIDE PAGE ---
+import { RideDetailPage } from "./features/rides/components/RideDetailPage";
 
 // --- Route Guards ---
 const ProtectedRoute = () => {

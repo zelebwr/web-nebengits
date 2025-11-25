@@ -33,6 +33,7 @@ export const createRide = async (
             vehiclePhotoUrl: imageUrl,
             verificationCode: generateOTP(),
             status: RideStatus.OPEN,
+            deletedAt: null,
         },
         include: {
             driver: {
@@ -40,6 +41,38 @@ export const createRide = async (
             },
         },
     });
+};
+
+/**
+ * Get ride by ID.
+ * @param rideId The ID of the ride to fetch.
+ * @return The ride data or null if not found.
+ */
+export const getRideById = async (rideId: string): Promise<ApiRide> => {
+    const ride = await prisma.ride.findUnique({
+        where: { id: rideId },
+        include: {
+            driver: {
+                select: { name: true, greenPoints: true, phone: true },
+            },
+        },
+    });
+
+    if (!ride) throw new Error("Ride not found");
+
+    // Sanitize
+    const { verificationCode, deletedAt, ...safeRide } = ride;
+    return {
+        ...safeRide,
+        driver: {
+            name: safeRide.driver.name,
+            greenPoints: safeRide.driver.greenPoints,
+            phone: safeRide.driver.phone,
+        },
+        departureTime: safeRide.departureTime.toISOString(),
+        createdAt: safeRide.createdAt.toISOString(),
+        updatedAt: safeRide.updatedAt.toISOString(),
+    };
 };
 
 /**
@@ -52,21 +85,21 @@ export const getAvailableRides = async (
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
-
+    
     // Build Filter
     const whereClause: any = {
         status: RideStatus.OPEN,
         departureTime: { gte: new Date() }, // Only future rides
         deletedAt: null, // Exclude soft-deleted
     };
-
+    
     if (query.destination) {
         whereClause.destination = {
             contains: query.destination,
             mode: "insensitive",
         };
     }
-
+    
     // Fetch Data and Count in parallel for efficiency
     const [rides, total] = await prisma.$transaction([
         prisma.ride.findMany({
@@ -85,7 +118,8 @@ export const getAvailableRides = async (
         }),
         prisma.ride.count({ where: whereClause }),
     ]);
-
+    
+    
     // Hide secret code from public feed for security
     const sanitizedRides: ApiRide[] = rides.map((ride) => {
         const { verificationCode, deletedAt, ...safeRide } = ride;
@@ -104,7 +138,11 @@ export const getAvailableRides = async (
             updatedAt: safeRide.updatedAt.toISOString(),
         };
     });
-
+    
+    // For debugging purposes
+    // console.log("Server Time:", new Date().toISOString());
+    // console.log("Filter:", JSON.stringify(whereClause, null, 2));
+    
     return {
         data: sanitizedRides,
         meta: {
