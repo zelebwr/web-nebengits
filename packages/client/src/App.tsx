@@ -8,16 +8,16 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./features/auth/hooks/useAuth";
 import { LoginPage } from "./features/auth/LoginPage";
+import { RegisterPage } from "./features/auth/RegisterPage";
 import { MainLayout } from "./components/Layout/MainLayout";
 
 // --- IMPORT THE REAL DASHBOARD HERE ---
 import { DashboardPage } from "./features/rides/DashboardPage";
 
-// --- CREATE RIDE PAGE ---
+// --- RIDE COMPONENTS ---
 import { CreateRidePage } from "./features/rides/components/CreateRidePage";
-
-// --- CREATE RIDE PAGE ---
 import { RideDetailPage } from "./features/rides/components/RideDetailPage";
+import { EditRidePage } from "./features/rides/components/EditRidePage";
 
 // --- Route Guards ---
 const ProtectedRoute = () => {
@@ -56,25 +56,21 @@ function App() {
                     {/* Public Routes */}
                     <Route element={<PublicRoute />}>
                         <Route path="/login" element={<LoginPage />} />
-                        <Route
-                            path="/register"
-                            element={
-                                <div className="p-10 text-center">
-                                    Register Page Coming Soon
-                                </div>
-                            }
-                        />
+                        <Route path="/register" element={<RegisterPage />} />
                     </Route>
 
                     {/* Protected Routes */}
                     <Route element={<ProtectedRoute />}>
-                        {/* Use the imported DashboardPage here */}
                         <Route path="/" element={<DashboardPage />} />
                         <Route
                             path="/rides/create"
                             element={<CreateRidePage />}
                         />
                         <Route path="/rides/:id" element={<RideDetailPage />} />
+                        <Route
+                            path="/rides/:id/edit"
+                            element={<EditRidePage />}
+                        />
                     </Route>
 
                     <Route path="*" element={<Navigate to="/" replace />} />

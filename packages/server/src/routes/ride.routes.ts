@@ -11,8 +11,14 @@ router.use(authenticate);
 // Public Feed (Authenticated Users)
 router.get("/", rideController.getRides);
 
-// NEW: Get Single Ride Detail
+// Get Single Ride Detail
 router.get("/:id", rideController.getRideDetail);
+
+// Driver: Update Ride (Partial Update)
+router.patch("/:id", rideController.updateRide);
+
+// Driver: Delete Ride (Soft Delete)
+router.delete("/:id", rideController.deleteRide);
 
 // Driver: Create Ride (Requires Image Upload)
 router.post("/", upload.single("vehiclePhoto"), rideController.createRide);

@@ -203,3 +203,68 @@ export const verifyRide = async (req: AuthRequest, res: Response) => {
         });
     }
 };
+/**
+ * PATCH /api/rides/:id
+ * Update an existing ride.
+ */
+export const updateRide = async (req: AuthRequest, res: Response) => {
+    try {
+        const rideId = req.params.id;
+        const driverId = req.user!.id; // Guaranteed by auth middleware
+        const input = req.body;
+
+        const updatedRide = await rideService.updateRide(rideId, driverId, input);
+
+        res.json({
+            success: true,
+            message: "Ride updated successfully",
+            data: updatedRide,
+        });
+    } catch (error: any) {
+        console.error("[Ride] Update Error:", error);
+
+        if (error.message.includes("Unauthorized")) {
+            return res.status(403).json({ success: false, message: error.message });
+        }
+        if (error.message === "Ride not found") {
+            return res.status(404).json({ success: false, message: error.message });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to update ride",
+        });
+    }
+};
+
+/**
+ * DELETE /api/rides/:id
+ * Soft delete a ride.
+ */
+export const deleteRide = async (req: AuthRequest, res: Response) => {
+    try {
+        const rideId = req.params.id;
+        const driverId = req.user!.id;
+
+        await rideService.deleteRide(rideId, driverId);
+
+        res.json({
+            success: true,
+            message: "Ride deleted successfully",
+        });
+    } catch (error: any) {
+        console.error("[Ride] Delete Error:", error);
+
+        if (error.message.includes("Unauthorized")) {
+            return res.status(403).json({ success: false, message: error.message });
+        }
+        if (error.message === "Ride not found") {
+            return res.status(404).json({ success: false, message: error.message });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete ride",
+        });
+    }
+};

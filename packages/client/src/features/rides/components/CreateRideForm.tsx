@@ -1,10 +1,24 @@
-import React, { useState, type ChangeEvent, type FormEvent } from "react";
+import React, {
+    useState,
+    useEffect,
+    type ChangeEvent,
+    type FormEvent,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Input, Toast } from "../../../components";
 import { apiClient } from "../../../lib/apiClient";
 import { ENDPOINTS } from "../../../lib/constants";
+import { type ApiRide } from "@web-nebengits/shared";
 
-export const CreateRideForm = () => {
+interface RideFormProps {
+    initialData?: ApiRide; // Optional: Used for Edit Mode
+    isEdit?: boolean;
+}
+
+export const CreateRideForm: React.FC<RideFormProps> = ({
+    initialData,
+    isEdit = false,
+}) => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [toast, setToast] = useState<{
@@ -20,6 +34,21 @@ export const CreateRideForm = () => {
     const [cost, setCost] = useState(10000);
     const [photo, setPhoto] = useState<File | null>(null);
 
+    // Populate form if editing
+    useEffect(() => {
+        if (isEdit && initialData) {
+            setDestination(initialData.destination);
+            setPickupPoint(initialData.pickupPoint);
+            // Format date for datetime-local input (YYYY-MM-DDTHH:mm)
+            const date = new Date(initialData.departureTime);
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            setDepartureTime(date.toISOString().slice(0, 16));
+
+            setSeatsAvailable(initialData.seatsAvailable);
+            setCost(initialData.cost);
+        }
+    }, [isEdit, initialData]);
+
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setPhoto(e.target.files[0]);
@@ -29,7 +58,8 @@ export const CreateRideForm = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        if (!photo) {
+        // Photo is mandatory only for creating a new ride
+        if (!isEdit && !photo) {
             setToast({
                 message: "Please upload a vehicle photo",
                 type: "error",
@@ -41,38 +71,53 @@ export const CreateRideForm = () => {
         setToast(null);
 
         try {
-            // 1. Prepare FormData for file upload
-            const formData = new FormData();
-            formData.append("destination", destination);
-            formData.append("pickupPoint", pickupPoint);
-            formData.append(
-                "departureTime",
-                new Date(departureTime).toISOString()
-            );
-            formData.append("seatsAvailable", seatsAvailable.toString());
-            formData.append("cost", cost.toString());
-            formData.append("vehiclePhoto", photo); // Key must match backend middleware
+            if (isEdit && initialData) {
+                // --- UPDATE MODE ---
+                await apiClient.patch(
+                    `${ENDPOINTS.RIDES.LIST}/${initialData.id}`,
+                    {
+                        destination,
+                        pickupPoint,
+                        departureTime: new Date(departureTime).toISOString(),
+                        seatsAvailable,
+                        cost,
+                    }
+                );
+                setToast({
+                    message: "Ride updated successfully!",
+                    type: "success",
+                });
+            } else {
+                // --- CREATE MODE ---
+                const formData = new FormData();
+                formData.append("destination", destination);
+                formData.append("pickupPoint", pickupPoint);
+                formData.append(
+                    "departureTime",
+                    new Date(departureTime).toISOString()
+                );
+                formData.append("seatsAvailable", seatsAvailable.toString());
+                formData.append("cost", cost.toString());
+                if (photo) formData.append("vehiclePhoto", photo);
 
-            // 2. Send Request
-            await apiClient.post(ENDPOINTS.RIDES.CREATE, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data", // Important!
-                },
-            });
+                await apiClient.post(ENDPOINTS.RIDES.CREATE, formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                });
+                setToast({
+                    message: "Ride created successfully!",
+                    type: "success",
+                });
+            }
 
-            setToast({
-                message: "Ride created successfully!",
-                type: "success",
-            });
-
-            // 3. Redirect after short delay
+            // Redirect
             setTimeout(() => {
-                navigate("/");
+                navigate(isEdit ? `/rides/${initialData?.id}` : "/");
             }, 1500);
         } catch (error: any) {
-            console.error("Create ride failed", error);
-            const msg =
-                error.response?.data?.message || "Failed to create ride";
+            console.error("Operation failed", error);
+            const msg = error.response?.data?.message || "Failed to save ride";
             setToast({ message: msg, type: "error" });
         } finally {
             setIsLoading(false);
@@ -88,6 +133,10 @@ export const CreateRideForm = () => {
                     onClose={() => setToast(null)}
                 />
             )}
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                {isEdit ? "Edit Ride Details" : "Offer a New Ride"}
+            </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Destination */}
@@ -148,24 +197,26 @@ export const CreateRideForm = () => {
                     />
                 </div>
 
-                {/* File Upload */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Vehicle Photo (Required for verification)
-                    </label>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-indigo-50 file:text-indigo-700
-              hover:file:bg-indigo-100"
-                        required
-                    />
-                </div>
+                {/* File Upload (Hidden in Edit Mode unless we want to support re-uploading) */}
+                {!isEdit && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Vehicle Photo (Required for verification)
+                        </label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="block w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-indigo-50 file:text-indigo-700
+                            hover:file:bg-indigo-100"
+                            required={!isEdit}
+                        />
+                    </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex justify-end gap-3">
@@ -181,7 +232,7 @@ export const CreateRideForm = () => {
                         variant="primary"
                         isLoading={isLoading}
                     >
-                        Post Ride
+                        {isEdit ? "Save Changes" : "Post Ride"}
                     </Button>
                 </div>
             </form>

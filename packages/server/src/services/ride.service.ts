@@ -238,3 +238,67 @@ export const verifyRide = async (
 
     return { success: true, pointsEarned: 15 };
 };
+
+/**
+ * Update a ride.
+ * Only the driver can update their own ride.
+ */
+export const updateRide = async (
+    rideId: string,
+    driverId: string,
+    data: Partial<CreateRideInput>
+) => {
+    // 1. Check existence and ownership
+    const ride = await prisma.ride.findUnique({ where: { id: rideId } });
+
+    if (!ride) throw new Error("Ride not found");
+    if (ride.driverId !== driverId) throw new Error("Unauthorized: You are not the driver");
+
+    // 2. Prepare update data
+    // We handle date conversion manually if it's passed as a string
+    const updateData: any = { ...data };
+    
+    if (data.departureTime) {
+        updateData.departureTime = new Date(data.departureTime);
+    }
+    
+    // Ensure numeric fields are actually numbers
+    if (data.seatsAvailable !== undefined) {
+        updateData.seatsAvailable = Number(data.seatsAvailable);
+    }
+    if (data.cost !== undefined) {
+        updateData.cost = Number(data.cost);
+    }
+
+    // 3. Perform Update
+    return await prisma.ride.update({
+        where: { id: rideId },
+        data: updateData,
+        include: {
+            driver: {
+                select: { name: true, greenPoints: true, phone: true },
+            },
+        },
+    });
+};
+
+/**
+ * Soft Delete a ride.
+ * Sets status to CANCELLED and fills deletedAt.
+ */
+export const deleteRide = async (rideId: string, driverId: string) => {
+    // 1. Check existence and ownership
+    const ride = await prisma.ride.findUnique({ where: { id: rideId } });
+
+    if (!ride) throw new Error("Ride not found");
+    if (ride.driverId !== driverId) throw new Error("Unauthorized: You are not the driver");
+
+    // 2. Perform Soft Delete
+    return await prisma.ride.update({
+        where: { id: rideId },
+        data: {
+            deletedAt: new Date(),
+            status: RideStatus.CANCELLED,
+        },
+    });
+};
