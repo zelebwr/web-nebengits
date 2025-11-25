@@ -7,5 +7,10 @@
         "strict": true,
         "esModuleInterop": true
     },
-    "include": ["src"]
+    "files": [],
+    "references": [
+        { "path": "packages/server" }, 
+        { "path": "packages/shared" },
+        { "path": "packages/client" }
+    ]
 }

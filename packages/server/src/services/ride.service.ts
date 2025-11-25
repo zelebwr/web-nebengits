@@ -19,7 +19,9 @@ export const createRide = async (
     input: CreateRideInput,
     imageUrl: string
 ) => {
+    // Ensure date string is converted to Date object
     const departureDate = new Date(input.departureTime);
+
     return await prisma.ride.create({
         data: {
             driverId,
@@ -86,12 +88,11 @@ export const getAvailableRides = async (
 
     // Hide secret code from public feed for security
     const sanitizedRides: ApiRide[] = rides.map((ride) => {
-        // Destructure to remove unwanted fields
         const { verificationCode, deletedAt, ...safeRide } = ride;
 
         return {
             ...safeRide,
-            // Ensure driver is correctly typed (Prisma includes it, but TS needs reassurance)
+            // Ensure driver is correctly typed
             driver: {
                 name: safeRide.driver.name,
                 greenPoints: safeRide.driver.greenPoints,
@@ -135,12 +136,11 @@ export const bookRide = async (userId: string, rideId: string) => {
     // 2. Atomic decrement
     // This query attempts to find the ride AND ensure seats > 0 at the same time.
     // If seatsAvailable is 0, the update will fail to find a record, throwing an error.
-    
     try {
         const updatedRide = await prisma.ride.update({
             where: {
                 id: rideId,
-                seatsAvailable: { gt: 0 }, // Atomic check: seats > 0
+                seatsAvailable: { gt: 0 }, // Condition: Must have seats
                 status: RideStatus.OPEN,
             },
             data: {

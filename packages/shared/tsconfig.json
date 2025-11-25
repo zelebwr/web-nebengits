@@ -7,11 +7,9 @@
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "types": ["node"]
+        "types": ["node"],
+        "composite": true,
+        "declaration": true
     },
-    "include": [
-        "src",
-        "prisma",
-        "**/*.ts"
-    ]
+    "include": ["src", "prisma", "**/*.ts"]
 }
