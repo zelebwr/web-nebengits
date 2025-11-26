@@ -50,153 +50,217 @@ const LOCATIONS = [
     "Stasiun Gubeng",
 ];
 
-async function main() {
-    console.log("🌱 Starting seed...");
+// Helper to generate random 4-digit OTP
+const generateOTP = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+};
 
-    // 1. Clean the database
+// Helper to get a random vehicle image URL
+// Using Unsplash keywords to get real car/bike photos
+const getRandomVehicleImage = (index: number) => {
+    const keywords = ["car", "scooter", "motorcycle", "vehicle", "traffic"];
+    // Use index to ensure we get slightly different images if the service supports it, 
+    // or just rely on the random keyword.
+    // 'source.unsplash.com' is deprecated/unreliable recently, so we use a reliable placeholder service 
+    // that supports 'real' looking images or use a specific set of Unsplash IDs if needed.
+    // For reliability in a demo without an API key, 'loremflickr' is a good alternative for specific keywords.
+    
+    const keyword = keywords[index % keywords.length];
+    // Random lock to prevent caching same image
+    const lock = Math.floor(Math.random() * 1000); 
+    return `https://loremflickr.com/640/480/${keyword}?lock=${lock}`;
+};
+
+async function main() {
+    console.log("🌱 Start seeding...");
+
+    // 1. Clean up existing data
     await prisma.ride.deleteMany();
     await prisma.user.deleteMany();
-    console.log("🧹 Database cleaned");
 
-    // 2. Shared Password (hashed "123456")
-    const hashedPassword = await bcrypt.hash("123456", 10);
+    const hashedPassword = await bcrypt.hash("password123", 10);
 
-    // 3. Create Core Users (For Demo)
-    const budi = await prisma.user.create({
-        data: {
+    // 2. Define Fixed Users List
+    const fixedUsers = [
+        // Admin
+        {
+            email: "admin@its.ac.id",
+            name: "Admin ITS",
+            role: Role.ADMIN,
+            phone: "08111111111",
+        },
+        // Drivers (Students who offer rides)
+        {
             email: "budi@student.its.ac.id",
             name: "Budi Santoso",
-            password: hashedPassword,
-            phone: "081234567890",
             role: Role.STUDENT,
-            greenPoints: 50,
-            deletedAt: null, // Explicitly set null
+            phone: "08122222221",
         },
-    });
-
-    const siti = await prisma.user.create({
-        data: {
+        {
             email: "siti@student.its.ac.id",
             name: "Siti Aminah",
-            password: hashedPassword,
-            phone: "081298765432",
             role: Role.STUDENT,
-            greenPoints: 20,
-            deletedAt: null, // Explicitly set null
-        },
-    });
-
-    console.log("👤 Created Core Users: Budi & Siti");
-
-    // 4. Create Batch Users (Drivers & Passengers)
-    const users = [budi, siti];
-    for (let i = 1; i <= 8; i++) {
-        const user = await prisma.user.create({
-            data: {
-                email: `mahasiswa${i}@student.its.ac.id`,
-                name: `Mahasiswa ITS ${i}`,
-                password: hashedPassword,
-                phone: `08120000000${i}`,
-                role: Role.STUDENT,
-                greenPoints: Math.floor(Math.random() * 100),
-                deletedAt: null, // Explicitly set null
-            },
-        });
-        users.push(user);
-    }
-    console.log("👥 Created 8 extra users");
-
-    // 5. Create Rides
-    type RideSeedData = {
-        driverId: string;
-        destination: string;
-        pickupPoint: string;
-        departureTime: Date;
-        seatsAvailable: number;
-        cost: number;
-        status: RideStatus;
-        passengerIds: string[];
-    };
-
-    const ridesToCreate: RideSeedData[] = [
-        {
-            driverId: budi.id,
-            destination: "Gedung Rektorat ITS",
-            pickupPoint: "Indomaret Gebang",
-            departureTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
-            seatsAvailable: 2,
-            cost: 5000,
-            status: RideStatus.OPEN,
-            passengerIds: [],
+            phone: "08122222222",
         },
         {
-            driverId: budi.id,
-            destination: "Galaxy Mall",
-            pickupPoint: "Departemen Informatika",
-            departureTime: new Date(Date.now() + 2 * 60 * 60 * 1000),
-            seatsAvailable: 3,
-            cost: 5000,
-            status: RideStatus.OPEN,
-            passengerIds: [],
+            email: "joko@student.its.ac.id",
+            name: "Joko Widodo",
+            role: Role.STUDENT,
+            phone: "08122222223",
+        },
+        // Passengers (Students who book rides)
+        {
+            email: "ani@student.its.ac.id",
+            name: "Ani Yudhoyono",
+            role: Role.STUDENT,
+            phone: "08133333331",
         },
         {
-            driverId: budi.id,
-            destination: "Terminal Keputih",
-            pickupPoint: "Asrama Mahasiswa",
-            departureTime: new Date(Date.now() - 24 * 60 * 60 * 1000),
-            seatsAvailable: 0,
-            cost: 5000,
-            status: RideStatus.COMPLETED,
-            passengerIds: [siti.id],
+            email: "rudi@student.its.ac.id",
+            name: "Rudi Habibie",
+            role: Role.STUDENT,
+            phone: "08133333332",
         },
     ];
 
-    for (let i = 0; i < 15; i++) {
-        const driver = users[Math.floor(Math.random() * users.length)];
-        const destination =
-            LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
-        let pickup = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
+    // 3. Create Users
+    const createdUsersMap: Record<string, string> = {}; // Map email -> ID
 
-        while (pickup === destination) {
-            pickup = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
-        }
+    for (const u of fixedUsers) {
+        const user = await prisma.user.create({
+            data: {
+                email: u.email,
+                name: u.name,
+                password: hashedPassword,
+                phone: u.phone,
+                role: u.role,
+                greenPoints: Math.floor(Math.random() * 500), // Random starting points
+            },
+        });
+        createdUsersMap[u.email] = user.id;
+        console.log(`Created user: ${u.email}`);
+    }
 
-        const timeOffset = Math.random() * 7 * 24 * 60 * 60 * 1000;
-        const departureTime = new Date(Date.now() + timeOffset);
+    // 4. Create Rides (Assigned to specific drivers)
+    const ridesToCreate = [
+        {
+            driverEmail: "budi@student.its.ac.id",
+            destination: "Gedung Rektorat ITS",
+            pickup: "Asrama Mahasiswa ITS",
+            timeOffsetHours: 2, // 2 hours from now
+            seats: 3,
+            cost: 10000,
+        },
+        {
+            driverEmail: "budi@student.its.ac.id",
+            destination: "Galaxy Mall (Nearby)",
+            pickup: "Departemen Teknik Informatika ITS",
+            timeOffsetHours: 5,
+            seats: 2,
+            cost: 15000,
+        },
+        {
+            driverEmail: "siti@student.its.ac.id",
+            destination: "Departemen Desain Produk Industri ITS",
+            pickup: "Kantin Pusat ITS",
+            timeOffsetHours: 24, // Tomorrow
+            seats: 1,
+            cost: 5000,
+        },
+        {
+            driverEmail: "joko@student.its.ac.id",
+            destination: "Pakuwon City (Nearby)",
+            pickup: "Bundaran ITS",
+            timeOffsetHours: 1,
+            seats: 4,
+            cost: 12000,
+        },
+    ];
 
+    for (let i = 0; i < 5; i++) {
+        const randomDriverEmail = [
+            "budi@student.its.ac.id",
+            "siti@student.its.ac.id",
+            "joko@student.its.ac.id",
+        ][Math.floor(Math.random() * 3)];
         ridesToCreate.push({
-            driverId: driver.id,
-            destination,
-            pickupPoint: pickup,
-            departureTime,
-            seatsAvailable: Math.floor(Math.random() * 3) + 1,
-            cost: Math.floor(Math.random() * 3 + 1) * 2000,
-            status: RideStatus.OPEN,
-            passengerIds: [],
+            driverEmail: randomDriverEmail,
+            destination:
+                LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)],
+            pickup: LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)],
+            timeOffsetHours: Math.random() * 48 + 2,
+            seats: Math.floor(Math.random() * 3) + 1,
+            cost: (Math.floor(Math.random() * 5) + 1) * 2000 + 2000,
         });
     }
 
-    for (const r of ridesToCreate) {
-        await prisma.ride.create({
+    const createdRides = [];
+
+    for (let i = 0; i < ridesToCreate.length; i++) {
+        const r = ridesToCreate[i];
+        const departureTime = new Date(
+            Date.now() + r.timeOffsetHours * 60 * 60 * 1000
+        );
+
+        const newRide = await prisma.ride.create({
             data: {
-                driverId: r.driverId,
+                driverId: createdUsersMap[r.driverEmail],
                 destination: r.destination,
-                pickupPoint: r.pickupPoint,
-                departureTime: r.departureTime,
-                seatsAvailable: r.seatsAvailable,
+                pickupPoint: r.pickup,
+                departureTime,
+                seatsAvailable: r.seats,
                 cost: r.cost,
-                status: r.status,
-                passengerIds: r.passengerIds,
-                vehiclePhotoUrl:
-                    "https://placehold.co/600x400/png?text=Vehicle+Photo",
-                verificationCode: "8921",
+                status: RideStatus.OPEN,
+                passengerIds: [],
+                // FIXED: Use LoremFlickr for real car/bike images
+                vehiclePhotoUrl: getRandomVehicleImage(i),
+                verificationCode: generateOTP(),
                 deletedAt: null,
             },
         });
+        createdRides.push(newRide);
     }
+    console.log(`🚗 Created ${createdRides.length} rides`);
 
-    console.log(`🚗 Created ${ridesToCreate.length} rides`);
+    // 5. Create Bookings (Assign passengers to rides)
+    // Let 'ani' book Budi's first ride
+    const rideToBook = createdRides[0];
+    const passengerId = createdUsersMap["ani@student.its.ac.id"];
+
+    await prisma.ride.update({
+        where: { id: rideToBook.id },
+        data: {
+            passengerIds: { push: passengerId },
+            seatsAvailable: { decrement: 1 },
+        },
+    });
+    console.log(
+        `🎫 Booked ride for ani@student.its.ac.id on ride ${rideToBook.id}`
+    );
+
+    // Let 'rudi' book Siti's ride
+    const rideToBook2 = createdRides[2];
+    const passengerId2 = createdUsersMap["rudi@student.its.ac.id"];
+
+    await prisma.ride.update({
+        where: { id: rideToBook2.id },
+        data: {
+            passengerIds: { push: passengerId2 },
+            seatsAvailable: { decrement: 1 },
+        },
+    });
+    console.log(
+        `🎫 Booked ride for rudi@student.its.ac.id on ride ${rideToBook2.id}`
+    );
+
     console.log("✅ Seeding finished.");
+    console.log("------------------------------------------------");
+    console.log("🔑 Login Credentials (Password: password123):");
+    console.log("   - Driver: budi@student.its.ac.id");
+    console.log("   - Driver: siti@student.its.ac.id");
+    console.log("   - Passenger: ani@student.its.ac.id");
+    console.log("   - Passenger: rudi@student.its.ac.id");
+    console.log("------------------------------------------------");
 }
 
 main()
