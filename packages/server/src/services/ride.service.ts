@@ -1,3 +1,4 @@
+import { Ride } from "@prisma/client";
 import { prisma } from "../config/db";
 import { generateOTP } from "../utils/otpGenerator";
 import {
@@ -7,6 +8,51 @@ import {
     RideStatus,
     ApiRide,
 } from "@web-nebengits/shared";
+
+/**
+ * Get rides created by a specific driver.
+ */
+export const getRidesByDriver = async (driverId: string) => {
+    return await prisma.ride.findMany({
+        where: {
+            driverId: driverId,
+            deletedAt: null,
+        },
+        orderBy: { departureTime: "desc" },
+        include: {
+            driver: {
+                select: { name: true, greenPoints: true, phone: true },
+            },
+            _count: {
+                select: { passengers: true },
+            },
+        },
+    });
+};
+
+/**
+ * Get rides booked by a specific passenger.
+ * Should definitely include the code so they can see it in "My Bookings".
+ */
+export const getRidesByPassenger = async (passengerId: string) => {
+    const rides = await prisma.ride.findMany({
+        where: {
+            passengerIds: { has: passengerId },
+            deletedAt: null,
+        },
+        orderBy: { departureTime: "desc" },
+        include: {
+            driver: {
+                select: { name: true, greenPoints: true, phone: true },
+            },
+        },
+    });
+
+    // We can safely return the code here because we know the requester IS the passenger
+    // (based on how the controller calls this)
+    return rides; 
+};
+
 
 /**
  * Create a new ride.
@@ -43,12 +89,28 @@ export const createRide = async (
     });
 };
 
+const mapPrismaStatusToShared = (s: unknown): RideStatus => {
+    switch (String(s)) {
+        case "OPEN":
+            return RideStatus.OPEN;
+        case "COMPLETED":
+            return RideStatus.COMPLETED;
+        case "CANCELLED":
+            return RideStatus.CANCELLED;
+        default:
+            return RideStatus.OPEN;
+    }
+};
+
 /**
  * Get ride by ID.
  * @param rideId The ID of the ride to fetch.
  * @return The ride data or null if not found.
  */
-export const getRideById = async (rideId: string): Promise<ApiRide> => {
+export const getRideById = async (
+    rideId: string,
+    currentUserId?: string
+): Promise<ApiRide> => {
     const ride = await prisma.ride.findUnique({
         where: { id: rideId },
         include: {
@@ -60,8 +122,15 @@ export const getRideById = async (rideId: string): Promise<ApiRide> => {
 
     if (!ride) throw new Error("Ride not found");
 
-    // Sanitize
+    // Determine if sensitive info should be shown
+    const isPassenger =
+        currentUserId && ride.passengerIds.includes(currentUserId);
+    const isDriver = currentUserId === ride.driverId;
+    const shouldShowCode = isPassenger || isDriver;
+
+    // Destructure to separate sensitive fields
     const { verificationCode, deletedAt, ...safeRide } = ride;
+
     return {
         ...safeRide,
         driver: {
@@ -72,35 +141,67 @@ export const getRideById = async (rideId: string): Promise<ApiRide> => {
         departureTime: safeRide.departureTime.toISOString(),
         createdAt: safeRide.createdAt.toISOString(),
         updatedAt: safeRide.updatedAt.toISOString(),
+        verificationCode: shouldShowCode ? (verificationCode ?? undefined) : undefined,
+        // map Prisma enum to shared enum
+        status: mapPrismaStatusToShared(ride.status),
     };
 };
 
 /**
  * Get all available rides with filters.
- * Handles pagination and searching.
+ * Handles pagination, searching, and exclusion of own/booked rides.
  */
 export const getAvailableRides = async (
-    query: ApiRideQuery
+    query: ApiRideQuery,
+    excludeUserId?: string // New optional parameter
 ): Promise<ApiRideListResponse> => {
+    // normalize excludeUserId so its type is string | undefined
+    const normalizedExcludeUserId: string | undefined =
+        excludeUserId ?? undefined;
+
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
-    
-    // Build Filter
+
     const whereClause: any = {
         status: RideStatus.OPEN,
-        departureTime: { gte: new Date() }, // Only future rides
-        deletedAt: null, // Exclude soft-deleted
+        departureTime: { gte: new Date() },
+        deletedAt: null,
     };
-    
-    if (query.destination) {
+
+    // Filter by Destination
+    if (query.destination && query.destination.trim() !== "") {
         whereClause.destination = {
             contains: query.destination,
             mode: "insensitive",
         };
     }
-    
-    // Fetch Data and Count in parallel for efficiency
+
+    // Filter by Pickup Point
+    if (query.pickupPoint && query.pickupPoint.trim() !== "") {
+        whereClause.pickupPoint = {
+            contains: query.pickupPoint,
+            mode: "insensitive",
+        };
+    }
+
+    // --- Exclude own rides and booked rides ---
+    if (normalizedExcludeUserId) {
+        whereClause.driverId = { not: normalizedExcludeUserId }; // Don't show my own rides
+        whereClause.passengerIds = { hasEvery: [] }; // Placeholder to enable AND clause
+
+        whereClause.AND = [
+            // Exclude rides where I am the driver (already handled above by driverId: { not ... }, but let's be safe)
+            { driverId: { not: normalizedExcludeUserId } },
+            // Exclude rides where I am a passenger
+            { NOT: { passengerIds: { has: normalizedExcludeUserId } } },
+        ];
+
+        // Clean up the direct assignments if we use AND
+        delete whereClause.driverId;
+    }
+    // -----------------------------------------------
+
     const [rides, total] = await prisma.$transaction([
         prisma.ride.findMany({
             where: whereClause,
@@ -111,38 +212,31 @@ export const getAvailableRides = async (
                 driver: {
                     select: { name: true, greenPoints: true, phone: true },
                 },
-                _count: {
-                    select: { passengers: true },
-                },
             },
         }),
         prisma.ride.count({ where: whereClause }),
     ]);
-    
-    
-    // Hide secret code from public feed for security
+
     const sanitizedRides: ApiRide[] = rides.map((ride) => {
         const { verificationCode, deletedAt, ...safeRide } = ride;
 
         return {
             ...safeRide,
-            // Ensure driver is correctly typed
             driver: {
                 name: safeRide.driver.name,
                 greenPoints: safeRide.driver.greenPoints,
                 phone: safeRide.driver.phone,
             },
-            // Convert Dates to ISO strings for JSON safety
             departureTime: safeRide.departureTime.toISOString(),
             createdAt: safeRide.createdAt.toISOString(),
             updatedAt: safeRide.updatedAt.toISOString(),
+            driverId: safeRide.driverId,
+            passengerIds: safeRide.passengerIds,
+            // map Prisma enum value to shared enum
+            status: mapPrismaStatusToShared(ride.status),
         };
     });
-    
-    // For debugging purposes
-    // console.log("Server Time:", new Date().toISOString());
-    // console.log("Filter:", JSON.stringify(whereClause, null, 2));
-    
+
     return {
         data: sanitizedRides,
         meta: {

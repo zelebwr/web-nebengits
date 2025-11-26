@@ -48,7 +48,7 @@ model Ride {
   pickupPoint      String
   departureTime    DateTime
   seatsAvailable   Int
-  cost             Int        @default(10000)
+  cost             Int        @default(5000)
   
   // Verification & Safety
   vehiclePhotoUrl  String

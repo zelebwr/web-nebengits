@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom"; // Import Link
+import { Link } from "react-router-dom";
 import { type ApiRide } from "@web-nebengits/shared";
 import { Card, Button } from "../../../components";
 
@@ -7,12 +7,14 @@ interface RideCardProps {
     ride: ApiRide;
     onBook: (rideId: string) => void;
     isBooking?: boolean;
+    currentUserId?: string;
 }
 
 export const RideCard: React.FC<RideCardProps> = ({
     ride,
     onBook,
     isBooking,
+    currentUserId,
 }) => {
     const formattedTime = new Date(ride.departureTime).toLocaleString("id-ID", {
         weekday: "short",
@@ -30,9 +32,48 @@ export const RideCard: React.FC<RideCardProps> = ({
         }).format(price);
     };
 
+    // DEBUGGING: Log values to console
+    console.log("RideCard Debug:", {
+        rideId: ride.id,
+        currentUserId: currentUserId,
+        driverId: ride.driverId,
+        passengerIds: ride.passengerIds,
+        isOwnerCheck: String(currentUserId) === String(ride.driverId),
+        isBookedCheck: ride.passengerIds?.some(
+            (id) => String(id) === String(currentUserId)
+        ),
+    });
+
+    // Robust Logic to check status
+    const isOwner = String(currentUserId) === String(ride.driverId);
+
+    const isAlreadyBooked =
+        !!currentUserId &&
+        Array.isArray(ride.passengerIds) &&
+        ride.passengerIds.some((id) => String(id) === String(currentUserId));
+
+    const isFull = ride.seatsAvailable === 0;
+
+    let buttonText = "Book Seat";
+    let isDisabled = isBooking || isFull;
+    let buttonVariant: "primary" | "secondary" | "danger" | "outline" =
+        "primary";
+
+    if (isOwner) {
+        buttonText = "Your Ride";
+        isDisabled = true;
+        buttonVariant = "secondary";
+    } else if (isAlreadyBooked) {
+        buttonText = "Booked";
+        isDisabled = true;
+        buttonVariant = "secondary";
+    } else if (isFull) {
+        buttonText = "Full";
+        buttonVariant = "secondary";
+    }
+
     return (
         <Card className="flex flex-col h-full overflow-hidden hover:shadow-lg transition-shadow duration-200">
-            {/* WRAP CONTENT IN LINK TO DETAIL PAGE */}
             <Link
                 to={`/rides/${ride.id}`}
                 className="flex-grow flex flex-col group"
@@ -87,19 +128,18 @@ export const RideCard: React.FC<RideCardProps> = ({
                 </div>
             </Link>
 
-            {/* ACTION BUTTON REMAINS OUTSIDE THE LINK */}
             <div className="p-4 pt-0 mt-auto">
                 <Button
-                    variant="primary"
+                    variant={buttonVariant}
                     fullWidth
                     onClick={(e) => {
-                        e.stopPropagation(); // Prevents bubbling if you decide to make the whole card clickable later
-                        onBook(ride.id);
+                        e.stopPropagation();
+                        if (!isDisabled) onBook(ride.id);
                     }}
-                    disabled={isBooking || ride.seatsAvailable === 0}
+                    disabled={isDisabled}
                     isLoading={isBooking}
                 >
-                    {ride.seatsAvailable === 0 ? "Full" : "Book Seat"}
+                    {buttonText}
                 </Button>
             </div>
         </Card>

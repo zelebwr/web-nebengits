@@ -24,8 +24,6 @@ export const RideDetailPage = () => {
         if (!id) return;
         try {
             setLoading(true);
-            // Call the new GET /rides/:id endpoint
-            // We need to construct the URL manually since constants.ts might not have it as a function yet
             const { data } = await apiClient.get<{
                 success: boolean;
                 data: ApiRide;
@@ -54,14 +52,32 @@ export const RideDetailPage = () => {
                 message: `Success! Your ticket code is: ${data.data.ticketCode}`,
                 type: "success",
             });
-
-            // Refresh ride data to update seat count
-            fetchRide();
+            fetchRide(); // Refresh data to update passenger list
         } catch (error: any) {
             const msg = error.response?.data?.message || "Failed to book ride";
             setToast({ message: msg, type: "error" });
         } finally {
             setBooking(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!id) return;
+        if (
+            !confirm(
+                "Are you sure you want to delete this ride? This cannot be undone."
+            )
+        )
+            return;
+
+        try {
+            await apiClient.delete(`${ENDPOINTS.RIDES.LIST}/${id}`);
+            setToast({ message: "Ride deleted successfully", type: "success" });
+            setTimeout(() => navigate("/"), 1000);
+        } catch (error: any) {
+            const msg =
+                error.response?.data?.message || "Failed to delete ride";
+            setToast({ message: msg, type: "error" });
         }
     };
 
@@ -94,11 +110,7 @@ export const RideDetailPage = () => {
         );
     }
 
-    // Check if current user is the driver (simple check)
-    // Note: ApiRide.driver doesn't have ID yet, so this is a best-effort check based on name/email if available
-    // Ideally, backend should return driverId in the ride object.
-    // For now, we'll default to false or check against user name if unique enough.
-    const isOwner = user?.name === ride.driver.name;
+    const isOwner = user?.id === ride.driverId;
 
     return (
         <MainLayout>
@@ -110,7 +122,7 @@ export const RideDetailPage = () => {
                 />
             )}
 
-            <div className="mb-6">
+            <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <Button
                     variant="secondary"
                     onClick={() => navigate("/")}
@@ -118,6 +130,20 @@ export const RideDetailPage = () => {
                 >
                     ← Back to Rides
                 </Button>
+
+                {isOwner && (
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => navigate(`/rides/${id}/edit`)}
+                        >
+                            Edit Ride
+                        </Button>
+                        <Button variant="danger" onClick={handleDelete}>
+                            Delete Ride
+                        </Button>
+                    </div>
+                )}
             </div>
 
             <div className="max-w-4xl mx-auto">
@@ -126,9 +152,9 @@ export const RideDetailPage = () => {
                     onBook={handleBook}
                     isBooking={booking}
                     isOwner={isOwner}
+                    currentUserId={user?.id} // Pass User ID Here
                 />
 
-                {/* Instructions Section */}
                 <div className="mt-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">
                         How it works
@@ -147,7 +173,6 @@ export const RideDetailPage = () => {
                             Show the code to the driver when you arrive to
                             verify your ride.
                         </li>
-                        <li>Enjoy your trip and earn Green Points!</li>
                     </ol>
                 </div>
             </div>

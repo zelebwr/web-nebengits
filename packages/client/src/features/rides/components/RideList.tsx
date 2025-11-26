@@ -3,14 +3,25 @@ import { apiClient } from "../../../lib/apiClient";
 import { ENDPOINTS } from "../../../lib/constants";
 import { type ApiRide } from "@web-nebengits/shared";
 import { RideCard } from "./RideCard";
-import { Toast } from "../../../components";
+import { RideCardSkeleton } from "./RideCardSkeleton";
+import { EmptyState } from "../../../components/Loaders/EmptyState";
+import { Toast, Input } from "../../../components";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/hooks/useAuth";
 
 export const RideList = () => {
+    const { user, isLoading: authLoading } = useAuth(); // Get auth loading state
     const [rides, setRides] = useState<ApiRide[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
+
+    // Search State
+    const [destinationQuery, setDestinationQuery] = useState("");
+    const [pickupQuery, setPickupQuery] = useState("");
+    const [debouncedDestination, setDebouncedDestination] = useState("");
+    const [debouncedPickup, setDebouncedPickup] = useState("");
 
     const [bookingId, setBookingId] = useState<string | null>(null);
     const [toast, setToast] = useState<{
@@ -18,22 +29,41 @@ export const RideList = () => {
         type: "success" | "error";
     } | null>(null);
 
-    // Ref for the intersection observer
+    const navigate = useNavigate();
     const observer = useRef<IntersectionObserver | null>(null);
 
+    // Debugging: Check if user is loaded
+    useEffect(() => {
+        console.log("RideList Auth State:", { user, authLoading });
+    }, [user, authLoading]);
+
+    // Debounce Logic
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedDestination(destinationQuery);
+            setDebouncedPickup(pickupQuery);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [destinationQuery, pickupQuery]);
+
+    // Fetch Rides
     const fetchRides = async (pageNum: number, isLoadMore = false) => {
         try {
             if (!isLoadMore) setLoading(true);
             else setLoadingMore(true);
-
-            console.log("Fetching rides page:", pageNum);
 
             const { data } = await apiClient.get<{
                 success: boolean;
                 data: ApiRide[];
                 meta: { totalPages: number };
             }>(ENDPOINTS.RIDES.LIST, {
-                params: { page: pageNum, limit: 9 },
+                params: {
+                    page: pageNum,
+                    limit: 9,
+                    destination: debouncedDestination,
+                    pickupPoint: debouncedPickup,
+                },
             });
 
             if (data.success && Array.isArray(data.data)) {
@@ -53,20 +83,15 @@ export const RideList = () => {
         }
     };
 
-    // Initial load
     useEffect(() => {
-        fetchRides(1);
-    }, []);
+        setPage(1);
+        fetchRides(1, false);
+    }, [debouncedDestination, debouncedPickup]);
 
-    // The callback ref for the last element
     const lastRideElementRef = useCallback(
         (node: HTMLDivElement) => {
             if (loading || loadingMore) return;
-
-            // Disconnect previous observer
             if (observer.current) observer.current.disconnect();
-
-            // Create new observer
             observer.current = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting && hasMore) {
                     setPage((prevPage) => {
@@ -76,8 +101,6 @@ export const RideList = () => {
                     });
                 }
             });
-
-            // Observe the new node
             if (node) observer.current.observe(node);
         },
         [loading, loadingMore, hasMore]
@@ -93,8 +116,7 @@ export const RideList = () => {
                 message: `Success! Your ticket code is: ${data.data.ticketCode}`,
                 type: "success",
             });
-            // Reset to page 1 to refresh data properly
-            fetchRides(1);
+            fetchRides(1, false);
             setPage(1);
         } catch (error: any) {
             const msg = error.response?.data?.message || "Failed to book ride";
@@ -104,14 +126,14 @@ export const RideList = () => {
         }
     };
 
+    // Combine loading states?
+    // Ideally we show skeletons if EITHER fetching rides OR fetching auth is happening
+    // But for now let's just rely on rides loading
     if (loading && page === 1) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                    <div
-                        key={i}
-                        className="h-80 bg-gray-100 animate-pulse rounded-xl"
-                    ></div>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <RideCardSkeleton key={i} />
                 ))}
             </div>
         );
@@ -119,11 +141,28 @@ export const RideList = () => {
 
     if (rides.length === 0) {
         return (
-            <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">
-                    No available rides found.
-                </p>
-            </div>
+            <EmptyState
+                title="No rides found"
+                description={
+                    debouncedDestination || debouncedPickup
+                        ? "Try adjusting your search filters."
+                        : "Looks like no one is driving right now. Be the first!"
+                }
+                actionLabel={
+                    debouncedDestination || debouncedPickup
+                        ? "Clear Search"
+                        : "Offer a Ride"
+                }
+                onAction={() => {
+                    if (debouncedDestination || debouncedPickup) {
+                        setDestinationQuery("");
+                        setPickupQuery("");
+                    } else {
+                        navigate("/rides/create");
+                    }
+                }}
+                icon="🔍"
+            />
         );
     }
 
@@ -137,46 +176,59 @@ export const RideList = () => {
                 />
             )}
 
+            <div className="mb-8 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                        label="Where to?"
+                        placeholder="Search destination (e.g., Galaxy Mall)"
+                        value={destinationQuery}
+                        onChange={(e) => setDestinationQuery(e.target.value)}
+                    />
+                    <Input
+                        label="Pickup From?"
+                        placeholder="Search pickup (e.g., Asrama)"
+                        value={pickupQuery}
+                        onChange={(e) => setPickupQuery(e.target.value)}
+                    />
+                </div>
+            </div>
+
             <div className="space-y-8 pb-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {rides.map((ride, index) => {
-                        // Attach ref to the last element
-                        if (rides.length === index + 1) {
-                            return (
-                                <div ref={lastRideElementRef} key={ride.id}>
-                                    <RideCard
-                                        ride={ride}
-                                        onBook={handleBook}
-                                        isBooking={bookingId === ride.id}
-                                    />
-                                </div>
-                            );
-                        } else {
-                            return (
-                                <div key={ride.id}>
-                                    <RideCard
-                                        ride={ride}
-                                        onBook={handleBook}
-                                        isBooking={bookingId === ride.id}
-                                    />
-                                </div>
-                            );
-                        }
+                        const isLast = rides.length === index + 1;
+                        return (
+                            <div
+                                ref={isLast ? lastRideElementRef : null}
+                                key={ride.id}
+                            >
+                                <RideCard
+                                    ride={ride}
+                                    onBook={handleBook}
+                                    isBooking={bookingId === ride.id}
+                                    // Ensure this passes correctly.
+                                    // If user is null, this is undefined, which causes the bug.
+                                    currentUserId={user?.id}
+                                />
+                            </div>
+                        );
                     })}
                 </div>
 
-                {/* Loading indicator at the bottom */}
                 {loadingMore && (
-                    <div className="flex justify-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                        {[1, 2, 3].map((i) => (
+                            <RideCardSkeleton key={i} />
+                        ))}
                     </div>
                 )}
 
-                {/* End of list message */}
                 {!hasMore && rides.length > 0 && (
-                    <p className="text-center text-gray-400 text-sm">
-                        You've reached the end of the list.
-                    </p>
+                    <div className="flex justify-center mt-8">
+                        <span className="bg-gray-100 text-gray-500 px-4 py-2 rounded-full text-xs font-medium">
+                            You've reached the end of the list 🏁
+                        </span>
+                    </div>
                 )}
             </div>
         </>

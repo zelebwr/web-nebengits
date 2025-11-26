@@ -1,96 +1,97 @@
-import {
+import React, {
     createContext,
     useContext,
     useState,
     useEffect,
-    type ReactNode,
+    ReactNode,
 } from "react";
 import { apiClient } from "../../../lib/apiClient";
-import { ENDPOINTS, TOKEN_KEY, USER_KEY } from "../../../lib/constants";
 import {
-    type LoginInput,
-    type RegisterInput,
-    type AuthResponse,
     type PublicUser,
+    type AuthResponse,
+    type LoginInput,
 } from "@web-nebengits/shared";
 
-// 1. Define the Context Shape (Exported for clarity)
-export interface AuthContextType {
+interface AuthContextType {
     user: PublicUser | null;
-    login: (input: LoginInput) => Promise<void>;
-    register: (input: RegisterInput) => Promise<void>;
-    logout: () => void;
+    token: string | null;
     isLoading: boolean;
+    login: (data: LoginInput) => Promise<void>;
+    logout: () => void;
+    refreshUser: () => Promise<void>; // New function
 }
 
-// 2. Create the Context
-// We export it so it can be imported if absolutely necessary, but usually useAuth is enough
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
-// 3. The Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<PublicUser | null>(null);
+    const [token, setToken] = useState<string | null>(
+        localStorage.getItem("token")
+    );
     const [isLoading, setIsLoading] = useState(true);
 
-    // Check for existing session on load
-    useEffect(() => {
-        const initAuth = async () => {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (token) {
-                try {
-                    const { data } = await apiClient.get<{ data: PublicUser }>(
-                        ENDPOINTS.AUTH.ME
-                    );
-                    setUser(data.data);
-                } catch (error) {
-                    console.error("Session expired", error);
-                    localStorage.removeItem(TOKEN_KEY);
-                }
-            }
+    // Function to fetch current user data
+    const fetchUser = async () => {
+        try {
+            const { data } = await apiClient.get<{ data: PublicUser }>(
+                "/users/me"
+            );
+            setUser(data.data);
+        } catch (error) {
+            console.error("Failed to fetch user", error);
+            logout();
+        } finally {
             setIsLoading(false);
-        };
-        initAuth();
-    }, []);
-
-    const login = async (input: LoginInput) => {
-        const { data } = await apiClient.post<{ data: AuthResponse }>(
-            ENDPOINTS.AUTH.LOGIN,
-            input
-        );
-        localStorage.setItem(TOKEN_KEY, data.data.token);
-        setUser(data.data.user);
+        }
     };
 
-    const register = async (input: RegisterInput) => {
-        const { data } = await apiClient.post<{ data: AuthResponse }>(
-            ENDPOINTS.AUTH.REGISTER,
+    useEffect(() => {
+        if (token) {
+            apiClient.defaults.headers.common[
+                "Authorization"
+            ] = `Bearer ${token}`;
+            fetchUser();
+        } else {
+            setIsLoading(false);
+        }
+    }, [token]);
+
+    const login = async (input: LoginInput) => {
+        const { data } = await apiClient.post<AuthResponse>(
+            "/auth/login",
             input
         );
-        localStorage.setItem(TOKEN_KEY, data.data.token);
+        localStorage.setItem("token", data.data.token);
+        setToken(data.data.token);
         setUser(data.data.user);
+        apiClient.defaults.headers.common[
+            "Authorization"
+        ] = `Bearer ${data.data.token}`;
     };
 
     const logout = () => {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        localStorage.removeItem("token");
+        setToken(null);
         setUser(null);
+        delete apiClient.defaults.headers.common["Authorization"];
+    };
+
+    // Expose fetchUser as refreshUser
+    const refreshUser = async () => {
+        if (token) await fetchUser();
     };
 
     return (
         <AuthContext.Provider
-            value={{ user, login, register, logout, isLoading }}
+            value={{ user, token, isLoading, login, logout, refreshUser }}
         >
             {children}
         </AuthContext.Provider>
     );
 };
 
-// 4. The Hook
-// Explicitly return AuthContextType, which is the SHAPE of the context value
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
+    if (!context) throw new Error("useAuth must be used within AuthProvider");
     return context;
 };

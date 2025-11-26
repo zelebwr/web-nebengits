@@ -6,17 +6,92 @@ import { env } from "../config/env";
 import { validateRideData } from "../utils/validation";
 
 /**
+ * GET /api/rides/posted
+ * Get rides created by the logged-in user.
+ */
+export const getMyPostedRides = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user!.id;
+        const rides = await rideService.getRidesByDriver(userId);
+
+        // Sanitize if needed (similar to getRides)
+        const sanitizedRides = rides.map((ride) => {
+             const { verificationCode, deletedAt, ...safeRide } = ride;
+             return {
+                ...safeRide,
+                driver: {
+                    name: safeRide.driver.name,
+                    greenPoints: safeRide.driver.greenPoints,
+                    phone: safeRide.driver.phone,
+                },
+                departureTime: safeRide.departureTime.toISOString(),
+                createdAt: safeRide.createdAt.toISOString(),
+                updatedAt: safeRide.updatedAt.toISOString(),
+             }
+        });
+
+        res.json({
+            success: true,
+            message: "My posted rides fetched",
+            data: sanitizedRides,
+        });
+    } catch (error: any) {
+        console.error("[Ride] GetMyPosted Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch posted rides" });
+    }
+};
+
+/**
+ * GET /api/rides/booked
+ * Get rides booked by the logged-in user.
+ */
+export const getMyBookedRides = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user!.id;
+        const rides = await rideService.getRidesByPassenger(userId);
+
+        const sanitizedRides = rides.map((ride) => {
+             // We DO NOT destructure verificationCode here, we want to keep it!
+             const { deletedAt, ...safeRide } = ride;
+             return {
+                ...safeRide,
+                driver: {
+                    name: safeRide.driver.name,
+                    greenPoints: safeRide.driver.greenPoints,
+                    phone: safeRide.driver.phone,
+                },
+                departureTime: safeRide.departureTime.toISOString(),
+                createdAt: safeRide.createdAt.toISOString(),
+                updatedAt: safeRide.updatedAt.toISOString(),
+                // verificationCode is included by default in 'safeRide' if not removed
+             }
+        });
+
+        res.json({
+            success: true,
+            message: "My booked rides fetched",
+            data: sanitizedRides,
+        });
+    } catch (error: any) {
+        console.error("[Ride] GetMyBooked Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch booked rides" });
+    }
+};
+
+/**
  * GET /api/rides
  * Fetch available rides with filters.
+ * NOW EXCLUDES current user's rides and bookings.
  */
 export const getRides = async (req: AuthRequest, res: Response) => {
     try {
-        
         const query = req.query as unknown as ApiRideQuery;
-        const result = await rideService.getAvailableRides(query);
-        
-        // console.log("GET /api/rides hit by user:", req.user?.email); // For debugging purposes
+        // Get the logged-in user's ID (might be undefined if public access is allowed, but your route is protected)
+        const currentUserId = req.user?.id;
 
+        // Pass currentUserId to service to filter out their own stuff
+        const result = await rideService.getAvailableRides(query, currentUserId);
+        
         res.json({
             success: true,
             message: "Available rides fetched",
@@ -34,12 +109,15 @@ export const getRides = async (req: AuthRequest, res: Response) => {
 
 /**
  * GET /api/rides/:id
- * Get details of a specific ride.
+ * Get single ride detail.
  */
 export const getRideDetail = async (req: AuthRequest, res: Response) => {
     try {
         const rideId = req.params.id;
-        const ride = await rideService.getRideById(rideId);
+        // Pass the user ID if logged in
+        const currentUserId = req.user?.id; 
+
+        const ride = await rideService.getRideById(rideId, currentUserId);
 
         res.json({
             success: true,
@@ -47,20 +125,10 @@ export const getRideDetail = async (req: AuthRequest, res: Response) => {
             data: ride,
         });
     } catch (error: any) {
-        if (error.message === "Ride not found") {
-            return res.status(404).json({
-                success: false,
-                message: "Ride not found",
-            });
-        }
-        console.error("[Ride] GetDetail Error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch ride details",
-        });
+        // ... error handling
+        res.status(500).json({ success: false, message: error.message });
     }
 };
-
 
 /**
  * POST /api/rides

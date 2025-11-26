@@ -11,6 +11,12 @@ router.use(authenticate);
 // Public Feed (Authenticated Users)
 router.get("/", rideController.getRides);
 
+// User's Rides
+router.get("/posted", rideController.getMyPostedRides);
+
+// User's Booked Rides
+router.get("/booked", rideController.getMyBookedRides);
+
 // Get Single Ride Detail
 router.get("/:id", rideController.getRideDetail);
 

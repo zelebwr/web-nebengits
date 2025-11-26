@@ -18,6 +18,11 @@ import { DashboardPage } from "./features/rides/DashboardPage";
 import { CreateRidePage } from "./features/rides/components/CreateRidePage";
 import { RideDetailPage } from "./features/rides/components/RideDetailPage";
 import { EditRidePage } from "./features/rides/components/EditRidePage";
+import { MyRidesPage } from "./features/rides/MyRidesPage";
+import { MyBookingsPage } from "./features/rides/MyBookingsPage";
+
+// --- USER PROFILE COMPONENT ---
+import { ProfilePage } from "./features/profile/ProfilePage";
 
 // --- Route Guards ---
 const ProtectedRoute = () => {
@@ -62,6 +67,8 @@ function App() {
                     {/* Protected Routes */}
                     <Route element={<ProtectedRoute />}>
                         <Route path="/" element={<DashboardPage />} />
+
+                        {/* Ride Routes */}
                         <Route
                             path="/rides/create"
                             element={<CreateRidePage />}
@@ -71,7 +78,13 @@ function App() {
                             path="/rides/:id/edit"
                             element={<EditRidePage />}
                         />
+
+                        {/* User Personal Routes */}
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/my-rides" element={<MyRidesPage />} />
+                        <Route path="/my-bookings" element={<MyBookingsPage />} />
                     </Route>
+
 
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
