@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../Button/Button";
 import { useAuth } from "../../features/auth/hooks/useAuth";
+// Import Lucide Icons
+import { Car, Leaf, User, LogOut, Ticket, ChevronDown } from "lucide-react";
 
 export const Navbar = () => {
     const { user, logout } = useAuth();
@@ -30,7 +32,6 @@ export const Navbar = () => {
     }, []);
 
     return (
-        // Dark Navbar: slate-900 with transparency
         <nav className="bg-slate-900/80 backdrop-blur-md border-b border-white/10 fixed w-full z-30 top-0 left-0 border-t-4 border-t-primary-600 shadow-lg transition-all">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
@@ -40,11 +41,10 @@ export const Navbar = () => {
                             to="/"
                             className="flex-shrink-0 flex items-center gap-2 group"
                         >
-                            <span className="text-3xl transform group-hover:scale-110 transition-transform duration-200">
-                                🚙
-                            </span>
+                            {/* Replaced Emoji with Icon */}
+                            <Car className="w-8 h-8 text-primary-400 transform group-hover:scale-110 transition-transform duration-200" />
                             <div className="flex flex-col">
-                                <span className="font-extrabold text-xl text-white tracking-tight leading-none mb-1">
+                                <span className="font-extrabold text-xl text-white tracking-tight leading-none">
                                     Nebeng
                                     <span className="text-primary-400">
                                         Its
@@ -74,24 +74,14 @@ export const Navbar = () => {
                                     <span className="hidden sm:block font-semibold">
                                         {user.name}
                                     </span>
-                                    <svg
+                                    <ChevronDown
                                         className={`w-4 h-4 text-slate-400 group-hover:text-white transition-transform ${
                                             isDropdownOpen ? "rotate-180" : ""
                                         }`}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M19 9l-7 7-7-7"
-                                        />
-                                    </svg>
+                                    />
                                 </button>
 
-                                {/* Dropdown Menu - Dark Mode */}
+                                {/* Dropdown Menu */}
                                 {isDropdownOpen && (
                                     <div className="absolute right-0 mt-2 w-56 bg-slate-800 rounded-xl shadow-2xl py-2 ring-1 ring-white/10 focus:outline-none animate-fade-in-up z-50 border border-white/10">
                                         <div className="px-4 py-3 border-b border-white/10 bg-slate-800/50">
@@ -105,9 +95,7 @@ export const Navbar = () => {
                                             {/* Green Points Display */}
                                             <div className="mt-3 flex items-center justify-between bg-slate-900/50 border border-eco-900/30 px-3 py-1.5 rounded-lg shadow-inner">
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="text-lg">
-                                                        🌱
-                                                    </span>
+                                                    <Leaf className="w-4 h-4 text-eco-400" />
                                                     <span className="text-xs font-bold text-slate-400">
                                                         Wallet
                                                     </span>
@@ -126,7 +114,7 @@ export const Navbar = () => {
                                                     setIsDropdownOpen(false)
                                                 }
                                             >
-                                                <span className="mr-2">👤</span>{" "}
+                                                <User className="w-4 h-4 mr-2" />{" "}
                                                 Your Profile
                                             </Link>
                                             <Link
@@ -136,7 +124,7 @@ export const Navbar = () => {
                                                     setIsDropdownOpen(false)
                                                 }
                                             >
-                                                <span className="mr-2">🚘</span>{" "}
+                                                <Car className="w-4 h-4 mr-2" />{" "}
                                                 My Posted Rides
                                             </Link>
                                             <Link
@@ -146,7 +134,7 @@ export const Navbar = () => {
                                                     setIsDropdownOpen(false)
                                                 }
                                             >
-                                                <span className="mr-2">🎟️</span>{" "}
+                                                <Ticket className="w-4 h-4 mr-2" />{" "}
                                                 My Booked Rides
                                             </Link>
                                         </div>
@@ -157,7 +145,7 @@ export const Navbar = () => {
                                             onClick={handleLogout}
                                             className="flex w-full items-center px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors font-medium"
                                         >
-                                            <span className="mr-2">🚪</span>{" "}
+                                            <LogOut className="w-4 h-4 mr-2" />{" "}
                                             Sign out
                                         </button>
                                     </div>

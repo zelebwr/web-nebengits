@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Input, Toast } from "../../components";
 import { apiClient } from "../../lib/apiClient";
+import { Car } from "lucide-react";
 
 export const RegisterPage = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
 
-    // Form State
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -16,7 +16,6 @@ export const RegisterPage = () => {
         confirmPassword: "",
     });
 
-    // Error/Success State
     const [toast, setToast] = useState<{
         message: string;
         type: "success" | "error";
@@ -30,7 +29,6 @@ export const RegisterPage = () => {
         e.preventDefault();
         setToast(null);
 
-        // 1. Frontend Validation
         if (
             !formData.email.endsWith("@student.its.ac.id") &&
             !formData.email.endsWith("@its.ac.id")
@@ -56,7 +54,6 @@ export const RegisterPage = () => {
         setIsLoading(true);
 
         try {
-            // 2. API Call
             await apiClient.post("/auth/register", {
                 name: formData.name,
                 email: formData.email,
@@ -64,13 +61,11 @@ export const RegisterPage = () => {
                 password: formData.password,
             });
 
-            // 3. Success Handler
             setToast({
-                message: "Registration successful! Redirecting to login...",
+                message: "Registration successful! Redirecting...",
                 type: "success",
             });
 
-            // Redirect after a short delay so user sees the success message
             setTimeout(() => {
                 navigate("/login");
             }, 1500);
@@ -85,7 +80,13 @@ export const RegisterPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-slate-900 relative overflow-hidden">
+            {/* Background Blobs */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-eco-600/20 rounded-full blur-[100px]"></div>
+                <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px]"></div>
+            </div>
+
             {toast && (
                 <Toast
                     message={toast.message}
@@ -94,21 +95,23 @@ export const RegisterPage = () => {
                 />
             )}
 
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="flex justify-center mb-4">
-                    <span className="text-4xl">🚙</span>
+            <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+                <div className="flex justify-center mb-6">
+                    <div className="p-4 bg-slate-800 rounded-2xl shadow-xl border border-slate-700">
+                        <Car className="w-12 h-12 text-eco-500" />
+                    </div>
                 </div>
-                <h2 className="text-center text-3xl font-extrabold text-gray-900">
+                <h2 className="text-center text-3xl font-extrabold text-white">
                     Join NebengIts
                 </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
+                <p className="mt-2 text-center text-sm text-slate-400">
                     The eco-friendly ride sharing platform for ITS Students.
                 </p>
             </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                    <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+                <div className="bg-slate-800/50 backdrop-blur-xl py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-white/10">
+                    <form className="space-y-5" onSubmit={handleSubmit}>
                         <Input
                             label="Full Name"
                             name="name"
@@ -156,12 +159,13 @@ export const RegisterPage = () => {
                             required
                         />
 
-                        <div>
+                        <div className="pt-2">
                             <Button
                                 type="submit"
                                 fullWidth
                                 variant="primary"
                                 isLoading={isLoading}
+                                className="bg-eco-600 hover:bg-eco-500 text-white shadow-lg shadow-eco-900/20"
                             >
                                 Create Account
                             </Button>
@@ -171,10 +175,10 @@ export const RegisterPage = () => {
                     <div className="mt-6">
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300" />
+                                <div className="w-full border-t border-slate-700" />
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-gray-500">
+                                <span className="px-2 bg-slate-800 text-slate-400 rounded">
                                     Already have an account?
                                 </span>
                             </div>
@@ -183,7 +187,7 @@ export const RegisterPage = () => {
                         <div className="mt-6 text-center">
                             <Link
                                 to="/login"
-                                className="font-medium text-indigo-600 hover:text-indigo-500"
+                                className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
                             >
                                 Sign in here
                             </Link>

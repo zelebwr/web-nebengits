@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "./features/auth/hooks/useAuth";
 import { LoginPage } from "./features/auth/LoginPage";
 import { RegisterPage } from "./features/auth/RegisterPage";
 import { MainLayout } from "./components/Layout/MainLayout";
+import ScrollToTop from "./components/ScrollToTop";
 
 // --- IMPORT THE REAL DASHBOARD HERE ---
 import { DashboardPage } from "./features/rides/DashboardPage";
@@ -23,6 +24,7 @@ import { MyBookingsPage } from "./features/rides/MyBookingsPage";
 
 // --- USER PROFILE COMPONENT ---
 import { ProfilePage } from "./features/profile/ProfilePage";
+
 
 // --- Route Guards ---
 const ProtectedRoute = () => {
@@ -57,6 +59,7 @@ function App() {
     return (
         <AuthProvider>
             <Router>
+                <ScrollToTop />
                 <Routes>
                     {/* Public Routes */}
                     <Route element={<PublicRoute />}>

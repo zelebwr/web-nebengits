@@ -8,6 +8,7 @@ import { EmptyState } from "../../../components/Loaders/EmptyState";
 import { Toast } from "../../../components";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth";
+import { Search, X } from "lucide-react"; // Import Icons
 
 export const RideList = () => {
     const { user, isLoading: authLoading } = useAuth();
@@ -117,9 +118,8 @@ export const RideList = () => {
         }
     };
 
-    // Solid Dark Input Style
-    const inputDarkClass =
-        "w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all hover:border-slate-600";
+    const inputGlassClass =
+        "w-full bg-eco-950/30 border border-eco-500/30 rounded-xl px-4 py-3 text-white placeholder-eco-200/50 focus:outline-none focus:ring-2 focus:ring-eco-500/50 focus:border-transparent transition-all backdrop-blur-sm hover:bg-eco-900/40";
 
     if (loading && page === 1) {
         return (
@@ -134,14 +134,14 @@ export const RideList = () => {
     if (rides.length === 0) {
         return (
             <>
-                <div className="mb-8 bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700">
+                <div className="mb-8 bg-eco-950/40 backdrop-blur-xl p-6 rounded-2xl shadow-xl border border-eco-500/20 ring-1 ring-black/5">
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <span className="text-primary-400">🔍</span> Find your
+                        <Search className="w-5 h-5 text-eco-400" /> Find your
                         ride
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">
+                            <label className="block text-sm font-medium text-eco-200/80 mb-1">
                                 Destination
                             </label>
                             <input
@@ -151,11 +151,11 @@ export const RideList = () => {
                                 onChange={(e) =>
                                     setDestinationQuery(e.target.value)
                                 }
-                                className={inputDarkClass}
+                                className={inputGlassClass}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">
+                            <label className="block text-sm font-medium text-eco-200/80 mb-1">
                                 Pickup Point
                             </label>
                             <input
@@ -163,7 +163,7 @@ export const RideList = () => {
                                 placeholder="From where? (e.g. Asrama)"
                                 value={pickupQuery}
                                 onChange={(e) => setPickupQuery(e.target.value)}
-                                className={inputDarkClass}
+                                className={inputGlassClass}
                             />
                         </div>
                     </div>
@@ -189,7 +189,7 @@ export const RideList = () => {
                             navigate("/rides/create");
                         }
                     }}
-                    icon="🔍"
+                    icon={<Search className="w-12 h-12 text-gray-400" />}
                 />
             </>
         );
@@ -205,13 +205,12 @@ export const RideList = () => {
                 />
             )}
 
-            {/* DARK SOLID FILTER SECTION */}
-            <div className="mb-8 bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700 transition-all hover:shadow-primary-500/5">
+            <div className="mb-8 bg-eco-950/40 backdrop-blur-xl p-6 rounded-2xl shadow-lg border border-eco-500/20 transition-all hover:bg-eco-900/50">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <span className="bg-slate-700 p-1.5 rounded-lg text-primary-400">
-                            🔍
-                        </span>
+                        <div className="bg-eco-500/20 p-1.5 rounded-lg">
+                            <Search className="w-5 h-5 text-eco-400" />
+                        </div>
                         Filter Rides
                     </h3>
                     {(destinationQuery || pickupQuery) && (
@@ -220,9 +219,9 @@ export const RideList = () => {
                                 setDestinationQuery("");
                                 setPickupQuery("");
                             }}
-                            className="text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
+                            className="text-sm text-red-400 hover:text-red-300 font-medium transition-colors flex items-center gap-1"
                         >
-                            Clear Filters
+                            <X className="w-4 h-4" /> Clear Filters
                         </button>
                     )}
                 </div>
@@ -235,7 +234,7 @@ export const RideList = () => {
                             onChange={(e) =>
                                 setDestinationQuery(e.target.value)
                             }
-                            className={inputDarkClass}
+                            className={inputGlassClass}
                         />
                     </div>
                     <div>
@@ -244,7 +243,7 @@ export const RideList = () => {
                             placeholder="Search Pickup Point..."
                             value={pickupQuery}
                             onChange={(e) => setPickupQuery(e.target.value)}
-                            className={inputDarkClass}
+                            className={inputGlassClass}
                         />
                     </div>
                 </div>
@@ -281,7 +280,7 @@ export const RideList = () => {
 
                 {!hasMore && rides.length > 0 && (
                     <div className="flex justify-center mt-8">
-                        <span className="bg-slate-800 border border-slate-700 text-slate-400 px-6 py-2 rounded-full text-xs font-medium shadow-sm">
+                        <span className="bg-eco-950/60 backdrop-blur border border-eco-500/20 text-eco-200 px-6 py-2 rounded-full text-xs font-medium shadow-sm">
                             You've reached the end of the list 🏁
                         </span>
                     </div>

@@ -1,10 +1,9 @@
 import React, { useEffect } from "react";
-
-export type ToastType = "success" | "error" | "info";
+import { Check, TriangleAlert } from "lucide-react";
 
 interface ToastProps {
     message: string;
-    type: ToastType;
+    type: "success" | "error";
     onClose: () => void;
     duration?: number;
 }
@@ -23,93 +22,36 @@ export const Toast: React.FC<ToastProps> = ({
         return () => clearTimeout(timer);
     }, [duration, onClose]);
 
-    const getBackgroundColor = () => {
-        switch (type) {
-            case "success":
-                return "bg-green-500";
-            case "error":
-                return "bg-red-500";
-            case "info":
-                return "bg-blue-500";
-            default:
-                return "bg-gray-800";
-        }
-    };
-
-    const getIcon = () => {
-        switch (type) {
-            case "success":
-                return (
-                    <svg
-                        className="w-5 h-5 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                        />
-                    </svg>
-                );
-            case "error":
-                return (
-                    <svg
-                        className="w-5 h-5 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
-                );
-            default:
-                return (
-                    <svg
-                        className="w-5 h-5 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                    </svg>
-                );
-        }
-    };
+    // Colors
+    const bgColor = type === "success" ? "bg-eco-600" : "bg-red-600";
+    const icon = type === "success" ? <Check /> : <TriangleAlert />;
 
     return (
+        // z-50 ensures it is above the Navbar (which is z-30)
+        // top-4 right-4 places it in the top right corner
         <div
-            className={`fixed top-4 right-4 z-50 flex items-center px-4 py-3 rounded-lg shadow-lg text-white ${getBackgroundColor()} animate-slide-in-right`}
+            className={`fixed top-20 right-4 z-50 flex items-center w-full max-w-xs p-4 space-x-3 text-white ${bgColor} rounded-lg shadow-2xl transition-all duration-300 animate-fade-in-up border border-white/10`}
         >
-            {getIcon()}
-            <p className="font-medium">{message}</p>
+            <div className="text-xl">{icon}</div>
+            <div className="text-sm font-semibold">{message}</div>
             <button
                 onClick={onClose}
-                className="ml-4 text-white hover:text-gray-200 focus:outline-none"
+                className="ml-auto -mx-1.5 -my-1.5 bg-white/20 text-white rounded-lg p-1.5 hover:bg-white/30 inline-flex h-8 w-8 items-center justify-center"
             >
+                <span className="sr-only">Close</span>
                 <svg
-                    className="w-4 h-4"
+                    className="w-3 h-3"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
                     fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                    viewBox="0 0 14 14"
                 >
                     <path
+                        stroke="currentColor"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
+                        strokeWidth="2"
+                        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
                     />
                 </svg>
             </button>

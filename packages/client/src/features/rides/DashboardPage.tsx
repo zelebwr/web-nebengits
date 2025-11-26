@@ -3,16 +3,13 @@ import { Link } from "react-router-dom";
 import { MainLayout, Button } from "../../components";
 import { RideList } from "./components/RideList";
 import { useAuth } from "../auth/hooks/useAuth";
+import { Leaf, CarFront, ArrowRight } from "lucide-react";
 
 export const DashboardPage = () => {
     const { user } = useAuth();
 
     return (
         <MainLayout>
-            {/* DARK MODE Background Blobs 
-                - Changed mix-blend-multiply to mix-blend-screen/normal for dark mode visibility
-                - Using brighter colors to glow against dark bg
-            */}
             <div
                 className="fixed inset-0 overflow-hidden pointer-events-none"
                 style={{ zIndex: 0 }}
@@ -22,9 +19,7 @@ export const DashboardPage = () => {
                 <div className="absolute -bottom-[20%] left-[20%] w-[800px] h-[800px] bg-purple-600 rounded-full filter blur-[120px] opacity-20 animate-blob animation-delay-4000"></div>
             </div>
 
-            {/* Hero Section */}
             <div className="relative bg-gradient-to-br from-primary-900 via-slate-900 to-slate-900 rounded-3xl overflow-hidden shadow-2xl shadow-primary-500/10 mb-12 text-white border border-white/10 z-10">
-                {/* Dot Overlay */}
                 <div
                     className="absolute inset-0 opacity-20"
                     style={{
@@ -59,33 +54,36 @@ export const DashboardPage = () => {
                                 <Button
                                     variant="secondary"
                                     size="lg"
-                                    className="bg-eco-400 text-slate-900 hover:bg-eco-300 shadow-lg shadow-white/5 border-none font-bold px-8 py-4 h-auto transform hover:-translate-y-1 transition-all"
+                                    className="bg-white text-slate-900 hover:bg-blue-50 shadow-lg shadow-white/5 border-none font-bold px-8 py-4 h-auto transform hover:-translate-y-1 transition-all flex items-center gap-2"
                                 >
-                                    Offer a Ride 🚗
+                                    Offer a Ride{" "}
+                                    <CarFront className="w-5 h-5" />
                                 </Button>
                             </Link>
                             <a
                                 href="#available-rides"
-                                className="inline-flex items-center justify-center px-8 py-4 border border-white/20 rounded-xl text-base font-bold text-white hover:bg-white/5 transition-all backdrop-blur-sm"
+                                className="inline-flex items-center justify-center px-8 py-4 border border-white/20 rounded-xl text-base font-bold text-white hover:bg-white/5 transition-all backdrop-blur-sm gap-2"
                             >
-                                Find a Ride
+                                Find a Ride <ArrowRight className="w-5 h-5" />
                             </a>
                         </div>
                     </div>
 
-                    {/* 3D Illustration Area */}
+                    {/* 3D Illustration Area - Replaced Emoji with Lucide Icon */}
                     <div className="hidden md:block relative z-10">
                         <div className="relative w-80 h-80">
                             <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-transparent rounded-full blur-3xl animate-pulse"></div>
                             <div className="relative w-full h-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center shadow-2xl border-t border-l border-white/20 rotate-6 hover:rotate-0 transition-all duration-700 group">
-                                <div className="text-[8rem] drop-shadow-2xl transform group-hover:scale-110 group-hover:-translate-y-4 transition-all duration-500">
-                                    🚙
-                                </div>
+                                {/* SVG Icon Replacement */}
+                                <CarFront
+                                    className="w-32 h-32 text-white/90 drop-shadow-2xl transform group-hover:scale-110 group-hover:-translate-y-4 transition-all duration-500"
+                                    strokeWidth={1}
+                                />
 
                                 {/* Floating Eco Badge */}
                                 <div className="absolute -bottom-8 -left-8 bg-slate-800/90 backdrop-blur border border-white/10 p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce-slow z-20">
-                                    <div className="bg-eco-900/50 p-3 rounded-full text-2xl text-eco-400">
-                                        🌿
+                                    <div className="bg-eco-900/50 p-3 rounded-full text-eco-400">
+                                        <Leaf className="w-6 h-6" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
@@ -102,7 +100,6 @@ export const DashboardPage = () => {
                 </div>
             </div>
 
-            {/* Main Content Area */}
             <div id="available-rides" className="space-y-6 relative z-10">
                 <div className="flex flex-col sm:flex-row justify-between items-end pb-2">
                     <div>
