@@ -5,19 +5,18 @@ import { type ApiRide } from "@web-nebengits/shared";
 import { RideCard } from "./RideCard";
 import { RideCardSkeleton } from "./RideCardSkeleton";
 import { EmptyState } from "../../../components/Loaders/EmptyState";
-import { Toast, Input } from "../../../components";
+import { Toast } from "../../../components";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/hooks/useAuth";
 
 export const RideList = () => {
-    const { user, isLoading: authLoading } = useAuth(); // Get auth loading state
+    const { user, isLoading: authLoading } = useAuth();
     const [rides, setRides] = useState<ApiRide[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
 
-    // Search State
     const [destinationQuery, setDestinationQuery] = useState("");
     const [pickupQuery, setPickupQuery] = useState("");
     const [debouncedDestination, setDebouncedDestination] = useState("");
@@ -32,22 +31,14 @@ export const RideList = () => {
     const navigate = useNavigate();
     const observer = useRef<IntersectionObserver | null>(null);
 
-    // Debugging: Check if user is loaded
-    useEffect(() => {
-        console.log("RideList Auth State:", { user, authLoading });
-    }, [user, authLoading]);
-
-    // Debounce Logic
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedDestination(destinationQuery);
             setDebouncedPickup(pickupQuery);
         }, 500);
-
         return () => clearTimeout(timer);
     }, [destinationQuery, pickupQuery]);
 
-    // Fetch Rides
     const fetchRides = async (pageNum: number, isLoadMore = false) => {
         try {
             if (!isLoadMore) setLoading(true);
@@ -126,9 +117,10 @@ export const RideList = () => {
         }
     };
 
-    // Combine loading states?
-    // Ideally we show skeletons if EITHER fetching rides OR fetching auth is happening
-    // But for now let's just rely on rides loading
+    // Solid Dark Input Style
+    const inputDarkClass =
+        "w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all hover:border-slate-600";
+
     if (loading && page === 1) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -141,28 +133,65 @@ export const RideList = () => {
 
     if (rides.length === 0) {
         return (
-            <EmptyState
-                title="No rides found"
-                description={
-                    debouncedDestination || debouncedPickup
-                        ? "Try adjusting your search filters."
-                        : "Looks like no one is driving right now. Be the first!"
-                }
-                actionLabel={
-                    debouncedDestination || debouncedPickup
-                        ? "Clear Search"
-                        : "Offer a Ride"
-                }
-                onAction={() => {
-                    if (debouncedDestination || debouncedPickup) {
-                        setDestinationQuery("");
-                        setPickupQuery("");
-                    } else {
-                        navigate("/rides/create");
+            <>
+                <div className="mb-8 bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700">
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <span className="text-primary-400">🔍</span> Find your
+                        ride
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">
+                                Destination
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Where to? (e.g. Galaxy Mall)"
+                                value={destinationQuery}
+                                onChange={(e) =>
+                                    setDestinationQuery(e.target.value)
+                                }
+                                className={inputDarkClass}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-400 mb-1">
+                                Pickup Point
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="From where? (e.g. Asrama)"
+                                value={pickupQuery}
+                                onChange={(e) => setPickupQuery(e.target.value)}
+                                className={inputDarkClass}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <EmptyState
+                    title="No rides found"
+                    description={
+                        debouncedDestination || debouncedPickup
+                            ? "Try adjusting your search filters to find more results."
+                            : "Looks like no one is driving right now. Be the first!"
                     }
-                }}
-                icon="🔍"
-            />
+                    actionLabel={
+                        debouncedDestination || debouncedPickup
+                            ? "Clear Search"
+                            : "Offer a Ride"
+                    }
+                    onAction={() => {
+                        if (debouncedDestination || debouncedPickup) {
+                            setDestinationQuery("");
+                            setPickupQuery("");
+                        } else {
+                            navigate("/rides/create");
+                        }
+                    }}
+                    icon="🔍"
+                />
+            </>
         );
     }
 
@@ -176,20 +205,48 @@ export const RideList = () => {
                 />
             )}
 
-            <div className="mb-8 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                        label="Where to?"
-                        placeholder="Search destination (e.g., Galaxy Mall)"
-                        value={destinationQuery}
-                        onChange={(e) => setDestinationQuery(e.target.value)}
-                    />
-                    <Input
-                        label="Pickup From?"
-                        placeholder="Search pickup (e.g., Asrama)"
-                        value={pickupQuery}
-                        onChange={(e) => setPickupQuery(e.target.value)}
-                    />
+            {/* DARK SOLID FILTER SECTION */}
+            <div className="mb-8 bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700 transition-all hover:shadow-primary-500/5">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span className="bg-slate-700 p-1.5 rounded-lg text-primary-400">
+                            🔍
+                        </span>
+                        Filter Rides
+                    </h3>
+                    {(destinationQuery || pickupQuery) && (
+                        <button
+                            onClick={() => {
+                                setDestinationQuery("");
+                                setPickupQuery("");
+                            }}
+                            className="text-sm text-red-400 hover:text-red-300 font-medium transition-colors"
+                        >
+                            Clear Filters
+                        </button>
+                    )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Search Destination..."
+                            value={destinationQuery}
+                            onChange={(e) =>
+                                setDestinationQuery(e.target.value)
+                            }
+                            className={inputDarkClass}
+                        />
+                    </div>
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Search Pickup Point..."
+                            value={pickupQuery}
+                            onChange={(e) => setPickupQuery(e.target.value)}
+                            className={inputDarkClass}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -201,13 +258,12 @@ export const RideList = () => {
                             <div
                                 ref={isLast ? lastRideElementRef : null}
                                 key={ride.id}
+                                className="h-full"
                             >
                                 <RideCard
                                     ride={ride}
                                     onBook={handleBook}
                                     isBooking={bookingId === ride.id}
-                                    // Ensure this passes correctly.
-                                    // If user is null, this is undefined, which causes the bug.
                                     currentUserId={user?.id}
                                 />
                             </div>
@@ -225,7 +281,7 @@ export const RideList = () => {
 
                 {!hasMore && rides.length > 0 && (
                     <div className="flex justify-center mt-8">
-                        <span className="bg-gray-100 text-gray-500 px-4 py-2 rounded-full text-xs font-medium">
+                        <span className="bg-slate-800 border border-slate-700 text-slate-400 px-6 py-2 rounded-full text-xs font-medium shadow-sm">
                             You've reached the end of the list 🏁
                         </span>
                     </div>

@@ -23,9 +23,9 @@ export const Button: React.FC<ButtonProps> = ({
     const variants = {
         // Using the new 'primary' color from tailwind.config.js
         primary:
-            "bg-primary-600 hover:bg-primary-700 text-white shadow-md shadow-primary-500/30 border border-transparent focus:ring-primary-500",
+            "bg-eco-500 hover:bg-eco-700 text-white shadow-md shadow-eco-500/30 border border-transparent focus:ring-eco-500",
         secondary:
-            "bg-white text-primary-700 border border-primary-200 hover:bg-primary-50 hover:border-primary-300 focus:ring-primary-500",
+            "bg-eco-400 text-eco-900 border border-eco-200 hover:bg-eco-200 hover:border-eco-300 focus:ring-eco-400",
         danger: "bg-red-600 hover:bg-red-700 text-white border border-transparent focus:ring-red-500",
         outline:
             "bg-transparent text-primary-600 border border-primary-600 hover:bg-primary-50 focus:ring-primary-500",

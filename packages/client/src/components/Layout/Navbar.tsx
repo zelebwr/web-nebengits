@@ -30,7 +30,8 @@ export const Navbar = () => {
     }, []);
 
     return (
-        <nav className="bg-white/80 backdrop-blur-md border-b border-primary-100 fixed w-full z-30 top-0 left-0 border-t-4 border-t-primary-600 shadow-sm transition-all">
+        // Dark Navbar: slate-900 with transparency
+        <nav className="bg-slate-900/80 backdrop-blur-md border-b border-white/10 fixed w-full z-30 top-0 left-0 border-t-4 border-t-primary-600 shadow-lg transition-all">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     {/* Logo Area */}
@@ -43,13 +44,13 @@ export const Navbar = () => {
                                 🚙
                             </span>
                             <div className="flex flex-col">
-                                <span className="font-extrabold text-xl text-primary-700 tracking-tight leading-none mb-1">
+                                <span className="font-extrabold text-xl text-white tracking-tight leading-none mb-1">
                                     Nebeng
-                                    <span className="text-primary-500">
+                                    <span className="text-primary-400">
                                         Its
                                     </span>
                                 </span>
-                                <span className="text-[0.65rem] font-semibold text-eco-600 uppercase tracking-wider leading-none">
+                                <span className="text-[0.65rem] font-semibold text-eco-400 uppercase tracking-wider leading-none">
                                     Green Campus
                                 </span>
                             </div>
@@ -64,9 +65,9 @@ export const Navbar = () => {
                                     onClick={() =>
                                         setIsDropdownOpen(!isDropdownOpen)
                                     }
-                                    className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-primary-700 focus:outline-none group transition-colors"
+                                    className="flex items-center gap-2 text-sm font-medium text-slate-200 hover:text-white focus:outline-none group transition-colors"
                                 >
-                                    <div className="w-9 h-9 bg-primary-50 border-2 border-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold shadow-sm group-hover:border-primary-300 transition-all">
+                                    <div className="w-9 h-9 bg-slate-800 border-2 border-slate-700 rounded-full flex items-center justify-center text-primary-400 font-bold shadow-sm group-hover:border-primary-500 transition-all">
                                         {user.name?.charAt(0).toUpperCase() ||
                                             "U"}
                                     </div>
@@ -74,7 +75,7 @@ export const Navbar = () => {
                                         {user.name}
                                     </span>
                                     <svg
-                                        className={`w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-transform ${
+                                        className={`w-4 h-4 text-slate-400 group-hover:text-white transition-transform ${
                                             isDropdownOpen ? "rotate-180" : ""
                                         }`}
                                         fill="none"
@@ -90,28 +91,28 @@ export const Navbar = () => {
                                     </svg>
                                 </button>
 
-                                {/* Dropdown Menu */}
+                                {/* Dropdown Menu - Dark Mode */}
                                 {isDropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-2 ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in-up z-50 border border-gray-100">
-                                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                                            <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">
+                                    <div className="absolute right-0 mt-2 w-56 bg-slate-800 rounded-xl shadow-2xl py-2 ring-1 ring-white/10 focus:outline-none animate-fade-in-up z-50 border border-white/10">
+                                        <div className="px-4 py-3 border-b border-white/10 bg-slate-800/50">
+                                            <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">
                                                 Signed in as
                                             </p>
-                                            <p className="text-sm font-medium text-gray-900 truncate mt-0.5">
+                                            <p className="text-sm font-medium text-white truncate mt-0.5">
                                                 {user.email}
                                             </p>
 
                                             {/* Green Points Display */}
-                                            <div className="mt-3 flex items-center justify-between bg-white border border-eco-100 px-3 py-1.5 rounded-lg shadow-sm">
+                                            <div className="mt-3 flex items-center justify-between bg-slate-900/50 border border-eco-900/30 px-3 py-1.5 rounded-lg shadow-inner">
                                                 <div className="flex items-center gap-1.5">
                                                     <span className="text-lg">
                                                         🌱
                                                     </span>
-                                                    <span className="text-xs font-bold text-gray-600">
+                                                    <span className="text-xs font-bold text-slate-400">
                                                         Wallet
                                                     </span>
                                                 </div>
-                                                <span className="text-sm font-extrabold text-eco-600">
+                                                <span className="text-sm font-extrabold text-eco-400">
                                                     {user.greenPoints || 0} GP
                                                 </span>
                                             </div>
@@ -120,7 +121,7 @@ export const Navbar = () => {
                                         <div className="py-1">
                                             <Link
                                                 to="/profile"
-                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                                                className="flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                                                 onClick={() =>
                                                     setIsDropdownOpen(false)
                                                 }
@@ -130,7 +131,7 @@ export const Navbar = () => {
                                             </Link>
                                             <Link
                                                 to="/my-rides"
-                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                                                className="flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                                                 onClick={() =>
                                                     setIsDropdownOpen(false)
                                                 }
@@ -140,7 +141,7 @@ export const Navbar = () => {
                                             </Link>
                                             <Link
                                                 to="/my-bookings"
-                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                                                className="flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                                                 onClick={() =>
                                                     setIsDropdownOpen(false)
                                                 }
@@ -150,11 +151,11 @@ export const Navbar = () => {
                                             </Link>
                                         </div>
 
-                                        <div className="border-t border-gray-100 my-1"></div>
+                                        <div className="border-t border-white/10 my-1"></div>
 
                                         <button
                                             onClick={handleLogout}
-                                            className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                                            className="flex w-full items-center px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors font-medium"
                                         >
                                             <span className="mr-2">🚪</span>{" "}
                                             Sign out
@@ -168,7 +169,7 @@ export const Navbar = () => {
                                     <Button
                                         variant="secondary"
                                         size="sm"
-                                        className="text-primary-700 hover:bg-primary-50 border-primary-200"
+                                        className="bg-transparent text-white border-white/30 hover:bg-white/10"
                                     >
                                         Log in
                                     </Button>
@@ -177,7 +178,7 @@ export const Navbar = () => {
                                     <Button
                                         variant="primary"
                                         size="sm"
-                                        className="bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-500/30"
+                                        className="bg-primary-600 hover:bg-primary-500 border-none text-white shadow-lg shadow-primary-900/50"
                                     >
                                         Sign up
                                     </Button>

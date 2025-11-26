@@ -7,15 +7,22 @@ interface MainLayoutProps {
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        // 1. Removed 'bg-gray-50' -> Now transparent so body gradient shows!
+        // 2. Added 'relative' and 'overflow-x-hidden' for safety
+        <div className="min-h-screen flex flex-col relative overflow-x-hidden mt-16">
             <Navbar />
-            <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20 pb-8">
+
+            {/* Added 'relative z-10'. 
+               This lifts the text/cards ABOVE the background blobs we added in Dashboard.
+            */}
+            <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
                 {children}
             </main>
-            <footer className="bg-white border-t border-gray-200 mt-auto">
+
+            <footer className="bg-white/80 backdrop-blur-md border-t border-primary-100 mt-auto relative z-10">
                 <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <p className="text-center text-sm text-gray-500">
-                        &copy; 2025 NebengIts. Built by Vibe Coding.
+                        &copy; 2025 NebengIts. Built for Vibe Coding.
                     </p>
                 </div>
             </footer>

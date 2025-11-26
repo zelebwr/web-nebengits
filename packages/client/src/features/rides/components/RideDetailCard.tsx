@@ -84,7 +84,7 @@ export const RideDetailCard: React.FC<RideDetailCardProps> = ({
                 <div
                     className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-bold shadow ${
                         ride.seatsAvailable > 0
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-eco-400 text-white"
                             : "bg-red-100 text-red-800"
                     }`}
                 >
