@@ -1,5 +1,53 @@
 # NebengIts Web Application
 
+## Table of Content
+- [A. Introduction](#a-introduction)
+- [B. Benefits](#b-benefits)
+  - [1. ITS College Students](#1-its-college-students)
+  - [2. ITS Institute](#2-its-institute)
+  - [3. Society](#3-society)
+- [C. Idea's Nitty Gritty](#c-ideas-nitty-gritty)
+- [D. User Roles \& Capabilities {#this-is-that}](#d-user-roles--capabilities-this-is-that)
+  - [1. The Driver](#1-the-driver)
+  - [2. The Passenger](#2-the-passenger)
+- [E. Detailed Feature \& Component Breakdown](#e-detailed-feature--component-breakdown)
+  - [1. Authentication \& Gatekeeping System](#1-authentication--gatekeeping-system)
+  - [2. The "Ride Board" (Core CRUD Module)](#2-the-ride-board-core-crud-module)
+  - [3. The "OTP Trust" Verification System](#3-the-otp-trust-verification-system)
+  - [4. Media \& Identity Verification (File Handling)](#4-media--identity-verification-file-handling)
+  - [5. The "Green Wallet" (Gamification Engine)](#5-the-green-wallet-gamification-engine)
+  - [6. Communication Bridge (UX Feature)](#6-communication-bridge-ux-feature)
+  - [Summary of Data Flow (How they connect)](#summary-of-data-flow-how-they-connect)
+- [F. Directory Structure](#f-directory-structure)
+  - [1. Root \& Configuration](#1-root--configuration)
+  - [2. `packages/client` (Frontend)](#2-packagesclient-frontend)
+  - [3. `packages/server` (Backend)](#3-packagesserver-backend)
+  - [4. `packages/shared` (Common)](#4-packagesshared-common)
+- [G. Tech Stack](#g-tech-stack)
+  - [1. Monorepo \& Language](#1-monorepo--language)
+  - [2. Frontend (Client)](#2-frontend-client)
+  - [3. Backend (Server)](#3-backend-server)
+  - [4. Database](#4-database)
+- [H. Database Schema](#h-database-schema)
+  - [1. User Model (`User`)](#1-user-model-user)
+  - [2. Ride Model (`Ride`)](#2-ride-model-ride)
+  - [3. Entity Relationship Diagram (ERD) Conceptualization](#3-entity-relationship-diagram-erd-conceptualization)
+  - [4. Prisma Schema Definition](#4-prisma-schema-definition)
+- [I. API Endpoints](#i-api-endpoints)
+  - [1. Authentication (`/api/auth`)](#1-authentication-apiauth)
+  - [2. User Management (`/api/users`)](#2-user-management-apiusers)
+  - [3. Ride Operations (`/api/rides`)](#3-ride-operations-apirides)
+  - [4. Image Serving (`/uploads`)](#4-image-serving-uploads)
+- [J.  How to Run This Project (Fork \& Setup)](#j--how-to-run-this-project-fork--setup)
+  - [Prerequisites](#prerequisites)
+  - [1. Fork \& Clone](#1-fork--clone)
+  - [2. Install Dependencies](#2-install-dependencies)
+  - [3. Configure Environment Variables](#3-configure-environment-variables)
+  - [4. Database Setup \& Seeding](#4-database-setup--seeding)
+  - [5. Run the App](#5-run-the-app)
+- [K. How to Test the Flow](#k-how-to-test-the-flow)
+
+
 ## A. Introduction
 
 As productive human beings with a lot of necessities in life, we have a lot of needs to go outside and get things done. This fact will be more valid if we are college students where we have needs to be done outside/outdoor other than the primary necessities, such as college responsibilities. With that being said, this brings us to the primary topic related to what I'm bringing up in this project, which is **Transportation**.
@@ -460,3 +508,119 @@ The core functionality for the Nebeng system.
 - **Purpose:** Serves the static vehicle images uploaded by drivers.
 
 ---
+
+## J.  How to Run This Project (Fork & Setup)
+
+Follow these steps to get a local copy up and running.
+
+### Prerequisites
+
+- **Node.js** (v18 or higher)
+- **pnpm** (Install via `npm i -g pnpm`)
+- **MongoDB** (Local instance or Atlas URI)
+
+### 1. Fork & Clone
+
+1. Click the **Fork** button at the top-right of this repository to create your own copy.
+2. Clone your forked repository:
+    
+	```
+	git clone https://github.com/YOUR_USERNAME/web-nebengits.git
+	cd web-nebengits
+	```
+    
+
+### 2. Install Dependencies
+
+Since this is a monorepo, install dependencies from the root:
+
+```
+pnpm install
+```
+
+### 3. Configure Environment Variables
+
+You need to set up environment variables for both the client and server.
+
+**Server (`packages/server`)**
+
+1. Go to the server directory: `cd packages/server`
+2. Copy the example env file: `cp .env.example .env`
+3. Update `.env` with your details:
+    
+    ```
+    PORT=5000
+    DATABASE_URL="mongodb://localhost:27017/nebengits?authSource=admin" # Or your Atlas URI
+    JWT_SECRET="supersecretkey123"
+    ```
+    
+
+**Client (`packages/client`)**
+
+1. Go to the client directory: `cd ../client` (from server) or `cd packages/client` (from root)
+2. Create a `.env` file (if needed, though Vite defaults usually work):
+    
+    ```
+    VITE_API_URL="http://localhost:5000/api"
+    ```
+    
+
+### 4. Database Setup & Seeding
+
+This project uses Prisma. You need to push the schema to your database and seed it with initial data.
+
+From the **root** directory:
+
+1. **Generate Prisma Client**:
+    
+    ```
+    pnpm prisma:generate
+    ```
+    
+2. **Push Schema to DB**:
+    
+    ```
+    pnpm prisma:push
+    ```
+    
+3. **Seed the Database** (Crucial!): This script creates dummy users (Budi, Siti, etc.) and rides so you don't start with an empty app.
+    
+    ```
+    pnpm prisma:seed
+    ```
+    
+    _Note: The seed script will print out login credentials (email/password) for test accounts._
+    
+
+### 5. Run the App
+
+You can run both frontend and backend concurrently from the root:
+
+```
+pnpm dev
+```
+
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost
+
+## K. How to Test the Flow
+
+1. **Login as a Driver**:
+    
+    - Use `budi@student.its.ac.id` / `password123`.
+    - Go to **"My Posted Rides"** to see rides you offer.
+    - Or click **"Offer a Ride"** to create a new one.
+        
+2. **Login as a Passenger** (Incognito window):
+    
+    - Use `ani@student.its.ac.id` / `password123`.
+    - Browse the **Dashboard**. You won't see Budi's rides if you already booked them (check "My Booked Rides").
+    - Find a new ride and click **"Book Seat"**.
+    - Go to **"My Booked Rides"**, click the ride, and copy the **Ticket Code**.
+        
+3. **Verify the Ride**:
+    
+    - Switch back to **Driver Budi**.
+    - Go to **"My Posted Rides"** -> Click the ride Ani just booked.
+    - Enter the Ticket Code in the **Driver Dashboard** box.
+    - Click **Verify**. Both users will get Green Points!
